@@ -1,5 +1,7 @@
 using System.Windows;
 using Microsoft.Win32;
+using Onyx.Core.Install;
+using Onyx.Core.Platform;
 using Onyx.ViewModels;
 
 namespace Onyx;
@@ -10,6 +12,12 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        if (e.Args is ["--apply", var jobPath])
+        {
+            Shutdown(RunElevatedJob(jobPath));
+            return;
+        }
+
         ApplyTheme();
 
         var services = Services.Build();
@@ -19,6 +27,24 @@ public partial class App : Application
         window.Show();
 
         _ = model.RefreshAsync(fromNetwork: true);
+    }
+
+    static int RunElevatedJob(string jobPath)
+    {
+        try
+        {
+            var job = ElevatedJob.Read(jobPath);
+
+            var engine = new InstallEngine(
+                new PhysicalFileSystem(), new Regsvr32Registrar(), new FileChecksum());
+
+            job.WriteJournal(engine.Apply(job.Plan, job.Payload()));
+            return 0;
+        }
+        catch (Exception)
+        {
+            return 1;
+        }
     }
 
     void ApplyTheme()

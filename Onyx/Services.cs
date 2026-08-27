@@ -44,7 +44,8 @@ public sealed class Services
             new PayloadFetcher(http),
             new InstallEngine(fs, new Regsvr32Registrar(), new FileChecksum()),
             guard,
-            StateStore.Load(StateStore.DefaultPath(folders.LocalAppData)));
+            StateStore.Load(StateStore.DefaultPath(folders.LocalAppData)),
+            new ProcessElevator());
 
         return new Services(manager, guard, cachePath, http);
     }

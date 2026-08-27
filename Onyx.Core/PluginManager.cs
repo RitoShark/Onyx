@@ -26,7 +26,8 @@ public sealed class PluginManager(
     PayloadFetcher payloads,
     InstallEngine engine,
     ProcessGuard guard,
-    StateStore state)
+    StateStore state,
+    IElevator? elevator = null)
 {
     readonly Dictionary<string, IReadOnlyList<Release>> _releases = new(StringComparer.Ordinal);
 
@@ -91,10 +92,38 @@ public sealed class PluginManager(
         Uninstall(plugin.Id, host.InstanceId);
 
         using var payload = await payloads.FetchAsync(plan, ct);
-        var journal = engine.Apply(plan, payload);
+        var journal = await ApplyAsync(plan, payload, ct);
 
         state.Record(plugin.Id, host.InstanceId, release.Tag, journal);
         state.Save();
+    }
+
+    async Task<InstallJournal> ApplyAsync(InstallPlan plan, IPayload payload, CancellationToken ct)
+    {
+        if (elevator is null || !Elevation.NeedsElevation(plan, elevator.CanWrite))
+            return engine.Apply(plan, payload);
+
+        var staging = Path.Combine(Path.GetTempPath(), "onyx-jobs");
+        var journalPath = Path.Combine(staging, $"journal-{Guid.NewGuid():N}.json");
+        var job = new ElevatedJob(plan, payload.Root, journalPath);
+        var jobPath = ElevatedJob.Write(job, staging);
+
+        try
+        {
+            await elevator.RunAsync(jobPath, ct);
+            return job.ReadJournal();
+        }
+        finally
+        {
+            TryDelete(jobPath);
+            TryDelete(journalPath);
+        }
+    }
+
+    static void TryDelete(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch (IOException) { }
     }
 
     public void UninstallAsync(string pluginId, string instanceId)
