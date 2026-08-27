@@ -8,10 +8,12 @@ public static class PlanResolver
 {
     public static InstallPlan Resolve(PluginEntry plugin, HostInstance host, Release release)
     {
-        var asset = AssetGlob.Match(release.Assets, plugin.Asset)
-            ?? throw new PlanException($"Release {release.Tag} has no asset matching '{plugin.Asset}'.");
+        var (assetPattern, steps) = plugin.For(host.InstanceId);
 
-        var operations = plugin.Steps
+        var asset = AssetGlob.Match(release.Assets, assetPattern)
+            ?? throw new PlanException($"Release {release.Tag} has no asset matching '{assetPattern}'.");
+
+        var operations = steps
             .Select(s => new PlannedOperation(s.Verb, s.From, s.To is null ? null : Target(host, s.To)))
             .OrderBy(o => o.Verb == StepVerb.Sha256 ? 0 : 1)
             .ToList();

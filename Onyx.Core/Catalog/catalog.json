@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": 2,
+  "revision": 3,
   "plugins": [
     {
       "id": "ritotex-photoshop",
@@ -35,29 +35,12 @@
       "category": "textures"
     },
     {
-      "id": "tex-gimp2",
-      "name": "GIMP 2 .tex",
-      "summary": "Import and save League .tex files in GIMP 2.10.",
+      "id": "tex-gimp",
+      "name": "GIMP .tex",
+      "summary": "Import and save League .tex files in GIMP.",
       "repo": "RitoShark/Gimp-Tex-Plugin",
       "host": "gimp",
-      "hostInstance": "2.10",
-      "asset": "GIMP2_TEX_Plugin_Windows.zip",
-      "steps": [
-        {
-          "verb": "copyDir",
-          "from": ".",
-          "to": "{host}/plug-ins"
-        }
-      ],
-      "category": "textures"
-    },
-    {
-      "id": "tex-gimp3",
-      "name": "GIMP 3 .tex",
-      "summary": "Import and save League .tex files in GIMP 3.",
-      "repo": "RitoShark/Gimp-Tex-Plugin",
-      "host": "gimp",
-      "hostInstance": "3.0",
+      "category": "textures",
       "asset": "GIMP3_TEX_Plugin_Windows.zip",
       "steps": [
         {
@@ -66,7 +49,30 @@
           "to": "{host}/plug-ins/gimp3_tex_plugin"
         }
       ],
-      "category": "textures"
+      "variants": [
+        {
+          "instancePrefix": "2.",
+          "asset": "GIMP2_TEX_Plugin_Windows.zip",
+          "steps": [
+            {
+              "verb": "copyDir",
+              "from": ".",
+              "to": "{host}/plug-ins"
+            }
+          ]
+        },
+        {
+          "instancePrefix": "3.",
+          "asset": "GIMP3_TEX_Plugin_Windows.zip",
+          "steps": [
+            {
+              "verb": "copyDir",
+              "from": ".",
+              "to": "{host}/plug-ins/gimp3_tex_plugin"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "ritoshark-maya",

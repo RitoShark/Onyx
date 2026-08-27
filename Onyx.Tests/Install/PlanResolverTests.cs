@@ -12,7 +12,30 @@ public class PlanResolverTests
             assets.Select(a => new ReleaseAsset(a, $"https://x/{a}", 1)).ToList());
 
     static PluginEntry Plugin(string asset, params InstallStep[] steps) =>
-        new("p", "P", "s", "Owner/Repo", "blender", null, "dcc", asset, steps);
+        new("p", "P", "s", "Owner/Repo", "blender", null, "dcc", asset, steps, []);
+
+    [Fact]
+    public void A_matching_variant_overrides_the_asset_and_steps()
+    {
+        var plugin = Plugin("GIMP3_TEX_Plugin_Windows.zip",
+            new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins/gimp3_tex_plugin")) with
+        {
+            Variants =
+            [
+                new PluginVariant("2.", "GIMP2_TEX_Plugin_Windows.zip",
+                    [new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins")]),
+                new PluginVariant("3.", "GIMP3_TEX_Plugin_Windows.zip",
+                    [new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins/gimp3_tex_plugin")])
+            ]
+        };
+        var host = new HostInstance("gimp", "2.10", "GIMP 2.10", @"C:\gimp\2.10");
+
+        var plan = PlanResolver.Resolve(plugin, host,
+            Release("v4.2.0", "GIMP2_TEX_Plugin_Windows.zip", "GIMP3_TEX_Plugin_Windows.zip"));
+
+        Assert.Equal("GIMP2_TEX_Plugin_Windows.zip", plan.Asset.Name);
+        Assert.Equal(@"C:\gimp\2.10\plug-ins", Assert.Single(plan.Operations).To);
+    }
 
     [Fact]
     public void Substitutes_the_host_path_into_targets()

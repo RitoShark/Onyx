@@ -120,14 +120,31 @@ public class PluginManagerTests : IDisposable
     }
 
     [Fact]
-    public async Task A_pinned_host_instance_never_targets_another_version()
+    public async Task Gimp_targets_every_supported_version_from_one_row()
     {
-        var manager = Build([new HostInstance("gimp", "2.10", "GIMP 2.10", @"C:\gimp\2.10")]);
+        var manager = Build(
+        [
+            new HostInstance("gimp", "2.10", "GIMP 2.10", @"C:\gimp\2.10"),
+            new HostInstance("gimp", "3.0", "GIMP 3.0", @"C:\gimp\3.0")
+        ]);
 
-        var statuses = await manager.StatusAsync(default);
+        var gimp = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-gimp");
 
-        Assert.True(statuses.Single(s => s.Plugin.Id == "tex-gimp2").HasHost);
-        Assert.False(statuses.Single(s => s.Plugin.Id == "tex-gimp3").HasHost);
+        Assert.Equal(["2.10", "3.0"], gimp.Targets.Select(t => t.Host.InstanceId));
+    }
+
+    [Fact]
+    public async Task An_unsupported_gimp_version_is_not_a_target()
+    {
+        var manager = Build(
+        [
+            new HostInstance("gimp", "3.0", "GIMP 3.0", @"C:\gimp\3.0"),
+            new HostInstance("gimp", "4.0", "GIMP 4.0", @"C:\gimp\4.0")
+        ]);
+
+        var gimp = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-gimp");
+
+        Assert.Equal(["3.0"], gimp.Targets.Select(t => t.Host.InstanceId));
     }
 
     [Fact]
@@ -137,8 +154,8 @@ public class PluginManagerTests : IDisposable
 
         var statuses = await manager.StatusAsync(default);
 
-        Assert.Equal(8, statuses.Count);
-        Assert.Equal(8, statuses.Select(s => s.Plugin.Id).Distinct().Count());
+        Assert.Equal(7, statuses.Count);
+        Assert.Equal(7, statuses.Select(s => s.Plugin.Id).Distinct().Count());
     }
 
     [Fact]

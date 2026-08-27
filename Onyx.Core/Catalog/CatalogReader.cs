@@ -39,6 +39,10 @@ public static class CatalogReader
                 if (steps.Count == 0)
                     throw new CatalogException($"Plugin '{id}' has no install steps.");
 
+                var variants = p.TryGetProperty("variants", out var vs) && vs.ValueKind == JsonValueKind.Array
+                    ? vs.EnumerateArray().Select(v => ReadVariant(id, v)).ToList()
+                    : [];
+
                 plugins.Add(new PluginEntry(
                     id,
                     Str(p, "name"),
@@ -48,7 +52,8 @@ public static class CatalogReader
                     Opt(p, "hostInstance"),
                     Opt(p, "category") ?? "misc",
                     Str(p, "asset"),
-                    steps));
+                    steps,
+                    variants));
             }
 
             if (plugins.Count == 0)
@@ -56,6 +61,15 @@ public static class CatalogReader
 
             return new Catalog(schema, revision, plugins);
         }
+    }
+
+    static PluginVariant ReadVariant(string pluginId, JsonElement e)
+    {
+        var steps = Array(e, "steps").Select(ReadStep).ToList();
+        if (steps.Count == 0)
+            throw new CatalogException($"A variant of plugin '{pluginId}' has no install steps.");
+
+        return new PluginVariant(Str(e, "instancePrefix"), Str(e, "asset"), steps);
     }
 
     static InstallStep ReadStep(JsonElement e)

@@ -195,6 +195,7 @@ public sealed class PluginManager(
     IReadOnlyList<HostInstance> InstancesFor(PluginEntry plugin) =>
         hosts.For(plugin.Host)
             .Where(h => plugin.HostInstance is null || h.InstanceId == plugin.HostInstance)
+            .Where(h => plugin.Supports(h.InstanceId))
             .ToList();
 
     PluginEntry Find(string pluginId) =>

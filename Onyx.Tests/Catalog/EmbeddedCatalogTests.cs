@@ -10,14 +10,13 @@ public class EmbeddedCatalogTests
     [Fact]
     public void The_shipped_catalog_parses()
     {
-        Assert.Equal(8, Shipped.Plugins.Count);
+        Assert.Equal(7, Shipped.Plugins.Count);
     }
 
     [Theory]
     [InlineData("ritotex-photoshop", "photoshop", "textures")]
     [InlineData("tex-paintnet", "paintnet", "textures")]
-    [InlineData("tex-gimp2", "gimp", "textures")]
-    [InlineData("tex-gimp3", "gimp", "textures")]
+    [InlineData("tex-gimp", "gimp", "textures")]
     [InlineData("ritoshark-maya", "maya", "dcc")]
     [InlineData("aventurine-blender", "blender", "dcc")]
     [InlineData("tex-thumbnails", "thumbnails", "system")]
@@ -48,28 +47,35 @@ public class EmbeddedCatalogTests
     }
 
     [Fact]
-    public void The_gimp_entries_target_different_versions_and_different_assets()
+    public void Gimp_is_one_plugin_whose_variants_pick_the_asset_per_major_version()
     {
-        var two = Shipped.Plugins.Single(p => p.Id == "tex-gimp2");
-        var three = Shipped.Plugins.Single(p => p.Id == "tex-gimp3");
+        var gimp = Shipped.Plugins.Single(p => p.Id == "tex-gimp");
 
-        Assert.Equal("2.10", two.HostInstance);
-        Assert.Equal("3.0", three.HostInstance);
-        Assert.NotEqual(two.Asset, three.Asset);
+        var (asset2, steps2) = gimp.For("2.10");
+        Assert.Equal("GIMP2_TEX_Plugin_Windows.zip", asset2);
+        Assert.Equal("{host}/plug-ins", Assert.Single(steps2).To);
+
+        var (asset3, steps3) = gimp.For("3.0");
+        Assert.Equal("GIMP3_TEX_Plugin_Windows.zip", asset3);
+        Assert.Equal("{host}/plug-ins/gimp3_tex_plugin", Assert.Single(steps3).To);
     }
 
     [Fact]
-    public void Gimp3_installs_into_its_own_named_folder_as_the_plugin_requires()
+    public void Gimp_supports_both_major_versions_and_nothing_else()
     {
-        var three = Shipped.Plugins.Single(p => p.Id == "tex-gimp3");
-        Assert.Equal("{host}/plug-ins/gimp3_tex_plugin", Assert.Single(three.Steps).To);
+        var gimp = Shipped.Plugins.Single(p => p.Id == "tex-gimp");
+
+        Assert.True(gimp.Supports("2.10"));
+        Assert.True(gimp.Supports("3.0"));
+        Assert.False(gimp.Supports("4.0"));
     }
 
     [Fact]
-    public void Gimp2_installs_flat_into_the_plugins_folder()
+    public void A_plugin_without_variants_supports_every_instance()
     {
-        var two = Shipped.Plugins.Single(p => p.Id == "tex-gimp2");
-        Assert.Equal("{host}/plug-ins", Assert.Single(two.Steps).To);
+        var blender = Shipped.Plugins.Single(p => p.Id == "aventurine-blender");
+        Assert.True(blender.Supports("4.3"));
+        Assert.True(blender.Supports("anything"));
     }
 
     [Fact]
