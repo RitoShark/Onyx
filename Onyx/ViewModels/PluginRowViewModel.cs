@@ -41,7 +41,6 @@ public sealed class PluginRowViewModel : ObservableObject
     readonly MainViewModel _owner;
     readonly PluginStatus _status;
     VersionChoice? _selectedVersion;
-    bool _isExpanded;
     bool _isBusy;
 
     public PluginRowViewModel(MainViewModel owner, PluginStatus status)
@@ -57,13 +56,14 @@ public sealed class PluginRowViewModel : ObservableObject
         InstallCommand = new RelayCommand(InstallAsync, () => CanAct);
         UninstallCommand = new RelayCommand(UninstallAsync, () => Installed && !IsBusy);
         ChooseFolderCommand = new RelayCommand(ChooseFolderAsync, () => !IsBusy);
-        ToggleCommand = new RelayCommand(() =>
+        DetailsCommand = new RelayCommand(() =>
         {
-            IsExpanded = !IsExpanded;
+            _owner.ShowDetail(this);
             return Task.CompletedTask;
         });
     }
 
+    public string PluginId => _status.Plugin.Id;
     public string Name => _status.Plugin.Name;
     public string Summary => _status.Plugin.Summary;
     public string Category => _status.Plugin.Category;
@@ -82,14 +82,14 @@ public sealed class PluginRowViewModel : ObservableObject
 
     public string IconGeometry => _status.Plugin.Host switch
     {
-        "photoshop" => "M 2,3 H 14 V 15 H 2 Z M 5,11 V 7 H 7.5 A 2,2 0 0 1 7.5,11 Z",
-        "paintnet" => "M 3,13 L 9,3 L 13,13 Z M 5.5,9.5 H 12",
-        "gimp" => "M 8,2 C 3.5,4 2,7 2,10 A 6,6 0 0 0 14,10 C 14,7 12,5 9,2 Z",
-        "maya" => "M 2,13 L 5,3 L 8,10 L 11,3 L 14,13",
-        "blender" => "M 8,2 A 6,6 0 1 0 8,14 A 6,6 0 0 0 8,2 M 5,9 A 3,3 0 1 0 11,9 A 3,3 0 0 0 5,9",
-        "thumbnails" => "M 2,3 H 14 V 13 H 2 Z M 2,10 L 6,6 L 9,9 L 11,7.5 L 14,10",
-        "hematite" => "M 2,4 H 14 V 12 H 2 Z M 4,7 L 6,9 L 4,11 M 8,11 H 12",
-        _ => "M 3,10 L 8,4 L 13,10"
+        "photoshop" => "M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z M 13.0,6.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0 M 17.0,10.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0 M 6.0,12.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0 M 8.0,7.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0",
+        "paintnet" => "m14.622 17.897-10.68-2.913 M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15",
+        "gimp" => "m11 10 3 3 M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031",
+        "maya" => "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z m3.3 7 8.7 5 8.7-5 M12 22V12",
+        "blender" => "M20.341 6.484A10 10 0 0 1 10.266 21.85 M3.659 17.516A10 10 0 0 1 13.74 2.152 M 9.0,12.0 a 3.0,3.0 0 1 0 6.0,0 a 3.0,3.0 0 1 0 -6.0,0 M 17.0,5.0 a 2.0,2.0 0 1 0 4.0,0 a 2.0,2.0 0 1 0 -4.0,0 M 3.0,19.0 a 2.0,2.0 0 1 0 4.0,0 a 2.0,2.0 0 1 0 -4.0,0",
+        "thumbnails" => "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16 M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2 M 12.0,7.0 a 1.0,1.0 0 1 0 2.0,0 a 1.0,1.0 0 1 0 -2.0,0 M 10.0,2.0 h 10.0 a 2.0,2.0 0 0 1 2.0,2.0 v 10.0 a 2.0,2.0 0 0 1 -2.0,2.0 h -10.0 a 2.0,2.0 0 0 1 -2.0,-2.0 v -10.0 a 2.0,2.0 0 0 1 2.0,-2.0 z",
+        "hematite" => "M12 19h8 m4 17 6-6-6-6",
+        _ => "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M 3.29,7 L 12,12 L 20.71,7 m7.5 4.27 9 5.15"
     };
 
     public bool HasHost => _status.HasHost;
@@ -130,12 +130,6 @@ public sealed class PluginRowViewModel : ObservableObject
         }
     }
 
-    public bool IsExpanded
-    {
-        get => _isExpanded;
-        set => Set(ref _isExpanded, value);
-    }
-
     public bool IsBusy
     {
         get => _isBusy;
@@ -151,7 +145,7 @@ public sealed class PluginRowViewModel : ObservableObject
     public RelayCommand InstallCommand { get; }
     public RelayCommand UninstallCommand { get; }
     public RelayCommand ChooseFolderCommand { get; }
-    public RelayCommand ToggleCommand { get; }
+    public RelayCommand DetailsCommand { get; }
 
     bool SelectedIsInstalled => SelectedVersion?.Tag == _status.InstalledTag;
 

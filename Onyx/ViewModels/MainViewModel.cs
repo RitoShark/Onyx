@@ -19,10 +19,10 @@ public sealed class MainViewModel : ObservableObject
 
     static readonly (string Key, string Title, string Icon)[] Sections =
     [
-        ("textures", "Texture Plugins", "M 2,3 H 14 V 13 H 2 Z M 2,10 L 6,6 L 9,9 L 11,7.5 L 14,10 M 11,5.5 A 0.9,0.9 0 1 0 11,5.49"),
-        ("dcc", "3D Software", "M 8,1.5 L 14,5 V 11 L 8,14.5 L 2,11 V 5 Z M 2,5 L 8,8.5 L 14,5 M 8,8.5 V 14.5"),
-        ("system", "Windows", "M 2,4 L 7.4,3.2 V 7.6 L 2,7.6 Z M 8.6,3 L 14,2.2 V 7.6 L 8.6,7.6 Z M 2,8.6 L 7.4,8.6 V 13 L 2,12.2 Z M 8.6,8.6 L 14,8.6 V 14 L 8.6,13.2 Z"),
-        ("misc", "Misc", "M 2,4.5 H 14 M 2,8 H 14 M 2,11.5 H 9")
+        ("textures", "Texture Plugins", "M 5.0,3.0 h 14.0 a 2.0,2.0 0 0 1 2.0,2.0 v 14.0 a 2.0,2.0 0 0 1 -2.0,2.0 h -14.0 a 2.0,2.0 0 0 1 -2.0,-2.0 v -14.0 a 2.0,2.0 0 0 1 2.0,-2.0 z M 7.0,9.0 a 2.0,2.0 0 1 0 4.0,0 a 2.0,2.0 0 1 0 -4.0,0 m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"),
+        ("dcc", "3D Software", "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z m3.3 7 8.7 5 8.7-5 M12 22V12"),
+        ("system", "Windows", "M 4.0,4.0 h 16.0 a 2.0,2.0 0 0 1 2.0,2.0 v 12.0 a 2.0,2.0 0 0 1 -2.0,2.0 h -16.0 a 2.0,2.0 0 0 1 -2.0,-2.0 v -12.0 a 2.0,2.0 0 0 1 2.0,-2.0 z M10 4v4 M2 8h20 M6 4v4"),
+        ("misc", "Misc", "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M 3.29,7 L 12,12 L 20.71,7 m7.5 4.27 9 5.15")
     ];
 
     readonly DispatcherTimer _refreshTimer;
@@ -40,8 +40,30 @@ public sealed class MainViewModel : ObservableObject
         _refreshTimer.Start();
     }
 
+    PluginRowViewModel? _detail;
+
     public Services Services { get; }
     public SheetViewModel Sheet { get; } = new();
+
+    public PluginRowViewModel? Detail
+    {
+        get => _detail;
+        private set
+        {
+            if (!Set(ref _detail, value)) return;
+            Raise(nameof(IsDetailOpen));
+        }
+    }
+
+    public bool IsDetailOpen => _detail is not null;
+
+    public RelayCommand CloseDetailCommand => new(() =>
+    {
+        Detail = null;
+        return Task.CompletedTask;
+    });
+
+    public void ShowDetail(PluginRowViewModel row) => Detail = row;
     public ObservableCollection<SectionViewModel> Groups { get; } = [];
     public RelayCommand RefreshCommand { get; }
 
@@ -109,6 +131,9 @@ public sealed class MainViewModel : ObservableObject
 
             if (stray.Count > 0)
                 Groups.Add(new SectionViewModel("Other", Sections[^1].Icon, stray));
+
+            if (Detail is not null)
+                Detail = Groups.SelectMany(g => g.Rows).FirstOrDefault(r => r.PluginId == Detail.PluginId);
 
             var problem = statuses.Select(s => s.Problem).FirstOrDefault(p => p is not null);
             if (problem is not null) StatusMessage = problem;
