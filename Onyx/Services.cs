@@ -39,7 +39,8 @@ public sealed class Services
 
         var manager = new PluginManager(
             catalog,
-            HostRegistry.Standard(new WindowsRegistry(), fs, folders),
+            HostRegistry.Standard(new WindowsRegistry(), fs, folders,
+                HostOverrides.Load(HostOverrides.DefaultPath(folders.LocalAppData))),
             new GitHubClient(http, new FileReleaseCache(Path.Combine(folders.LocalAppData, "RitoShark", "Onyx", "releases"))),
             new PayloadFetcher(http),
             new InstallEngine(fs, new Regsvr32Registrar(), new FileChecksum()),

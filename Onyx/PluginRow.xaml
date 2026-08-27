@@ -97,6 +97,44 @@
                     CornerRadius="0,0,9,9"
                     ClipToBounds="True"
                     Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="MaxHeight" Value="0" />
+                        <Setter Property="Opacity" Value="0" />
+                        <Style.Triggers>
+                            <Trigger Property="IsVisible" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="MaxHeight"
+                                                             To="320" Duration="0:0:0.22">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             To="1" Duration="0:0:0.22" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="MaxHeight"
+                                                             To="0" Duration="0:0:0.18">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseIn" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             To="0" Duration="0:0:0.14" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Grid Margin="16,14">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -152,6 +190,9 @@
                         <Button Style="{StaticResource LinkButton}"
                                 Content="Reveal in Explorer"
                                 Command="{Binding RevealCommand}" />
+                        <Button Style="{StaticResource LinkButton}"
+                                Content="Choose folder…"
+                                Command="{Binding ChooseFolderCommand}" />
                         <Button Style="{StaticResource DangerLinkButton}"
                                 Content="Uninstall"
                                 Command="{Binding UninstallCommand}" />

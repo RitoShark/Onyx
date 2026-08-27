@@ -32,6 +32,7 @@ public sealed class PluginManager(
     readonly Dictionary<string, IReadOnlyList<Release>> _releases = new(StringComparer.Ordinal);
 
     public Catalog.Catalog Catalog => catalog;
+    public HostRegistry Hosts => hosts;
 
     public async Task<IReadOnlyList<PluginStatus>> StatusAsync(CancellationToken ct)
     {

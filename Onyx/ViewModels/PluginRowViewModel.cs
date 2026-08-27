@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.Win32;
 using Onyx.Core;
+using Onyx.Core.Hosts;
 using Onyx.Core.Releases;
 
 namespace Onyx.ViewModels;
@@ -34,7 +36,8 @@ public sealed class PluginRowViewModel : ObservableObject
 
         InstallCommand = new RelayCommand(InstallAsync, () => CanAct);
         UninstallCommand = new RelayCommand(UninstallAsync, () => Installed && !IsBusy);
-        RevealCommand = new RelayCommand(Reveal, () => Installed);
+        RevealCommand = new RelayCommand(Reveal, () => HasHost);
+        ChooseFolderCommand = new RelayCommand(ChooseFolderAsync, () => !IsBusy);
         ToggleCommand = new RelayCommand(() =>
         {
             IsExpanded = !IsExpanded;
@@ -122,7 +125,24 @@ public sealed class PluginRowViewModel : ObservableObject
     public RelayCommand InstallCommand { get; }
     public RelayCommand UninstallCommand { get; }
     public RelayCommand RevealCommand { get; }
+    public RelayCommand ChooseFolderCommand { get; }
     public RelayCommand ToggleCommand { get; }
+
+    async Task ChooseFolderAsync()
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = $"Choose the {HostDisplayName(_status.Plugin.Host)} folder",
+            InitialDirectory = _status.Host?.Path ?? ""
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var instanceId = _status.Host?.InstanceId ?? HostOverrides.ManualInstance;
+        _owner.Services.Manager.Hosts.Overrides.Set(_status.Plugin.Host, instanceId, dialog.FolderName);
+
+        await _owner.RefreshAsync(fromNetwork: false);
+    }
 
     bool SelectedIsInstalled => SelectedVersion?.Tag == _status.InstalledTag;
 
