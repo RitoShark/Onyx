@@ -34,13 +34,4 @@ public class PresenceProbeTests
     {
         Assert.Null(new ThumbnailPresenceProbe(new FakeRegistry(), new FakeFileSystem()).DetectInstalled(@"C:\anything"));
     }
-
-    [Fact]
-    public void Hematite_is_detected_from_its_exe_in_the_host_folder()
-    {
-        var fs = new FakeFileSystem().WithFile(@"C:\local\RitoShark\Hematite\hematite-cli.exe");
-
-        Assert.NotNull(new HematitePresenceProbe(fs).DetectInstalled(@"C:\local\RitoShark\Hematite"));
-        Assert.Null(new HematitePresenceProbe(fs).DetectInstalled(@"C:\elsewhere"));
-    }
 }

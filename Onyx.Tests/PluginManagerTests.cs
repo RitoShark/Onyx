@@ -81,6 +81,7 @@ public class PluginManagerTests : IDisposable
             new InstallEngine(fs ?? new FakeFileSystem(), new FakeRegistrar(), new FakeChecksum()),
             new ProcessGuard(new FakeProcessTable(running ?? [])),
             StateStore.Load(_statePath),
+            fs ?? new FakeFileSystem(),
             probes: probes);
     }
 
@@ -259,7 +260,7 @@ public class PluginManagerTests : IDisposable
     }
 
     [Fact]
-    public async Task A_presence_probe_reports_an_untracked_install_as_detected()
+    public async Task A_presence_probe_reports_an_untracked_install_as_installed()
     {
         var manager = Build(
             [new HostInstance("thumbnails", "default", "Windows Explorer", @"C:\local\Thumbs")],
@@ -268,9 +269,62 @@ public class PluginManagerTests : IDisposable
         var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-thumbnails");
 
         var target = Assert.Single(status.Targets);
-        Assert.Equal("detected", target.InstalledTag);
+        Assert.Equal("installed", target.InstalledTag);
         Assert.True(target.External);
         Assert.True(target.UpdateAvailable);
+    }
+
+    [Fact]
+    public async Task A_marker_file_reports_an_untracked_install_as_installed()
+    {
+        var fs = new FakeFileSystem()
+            .WithFile(@"C:\maya\2023\plug-ins\ritoshark_plugin.py");
+
+        var manager = Build(
+            [new HostInstance("maya", "2023", "Maya 2023", @"C:\maya\2023")],
+            fs: fs);
+
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "ritoshark-maya");
+
+        var target = Assert.Single(status.Targets);
+        Assert.Equal("installed", target.InstalledTag);
+        Assert.True(target.External);
+    }
+
+    [Fact]
+    public async Task The_photoshop_marker_covers_the_required_file_formats_folder()
+    {
+        var fs = new FakeFileSystem()
+            .WithFile(@"C:\ps\Required\Plug-ins\File Formats\RitoTex.8bi")
+            .WithDirectory(@"C:\ps\Plug-ins");
+
+        var manager = Build(
+            [new HostInstance("photoshop", "200.0", "Adobe Photoshop 2026", @"C:\ps")],
+            fs: fs);
+
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "ritotex-photoshop");
+
+        Assert.Equal("installed", Assert.Single(status.Targets).InstalledTag);
+    }
+
+    [Fact]
+    public async Task Gimp_markers_follow_the_variant_for_each_version()
+    {
+        var fs = new FakeFileSystem()
+            .WithFile(@"C:\gimp.10\plug-ins\gimp2_tex_plugin.py");
+
+        var manager = Build(
+            [
+                new HostInstance("gimp", "2.10", "GIMP 2.10", @"C:\gimp.10"),
+                new HostInstance("gimp", "3.0", "GIMP 3.0", @"C:\gimp.0")
+            ],
+            fs: fs);
+
+        var gimp = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-gimp");
+
+        Assert.Equal("installed", gimp.Targets[0].InstalledTag);
+        Assert.Null(gimp.Targets[1].InstalledTag);
+        Assert.Equal("installed", gimp.InstalledTag);
     }
 
     [Fact]

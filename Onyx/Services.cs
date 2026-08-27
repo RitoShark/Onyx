@@ -46,8 +46,9 @@ public sealed class Services
             new InstallEngine(fs, new Regsvr32Registrar(), new FileChecksum()),
             guard,
             StateStore.Load(StateStore.DefaultPath(folders.LocalAppData)),
+            fs,
             new ProcessElevator(),
-            [new ThumbnailPresenceProbe(new WindowsRegistry(), fs), new HematitePresenceProbe(fs)]);
+            [new ThumbnailPresenceProbe(new WindowsRegistry(), fs)]);
 
         return new Services(manager, guard, cachePath, http);
     }

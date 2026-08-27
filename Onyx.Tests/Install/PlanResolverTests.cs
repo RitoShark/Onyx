@@ -12,7 +12,7 @@ public class PlanResolverTests
             assets.Select(a => new ReleaseAsset(a, $"https://x/{a}", 1)).ToList());
 
     static PluginEntry Plugin(string asset, params InstallStep[] steps) =>
-        new("p", "P", "s", "Owner/Repo", "blender", null, "dcc", asset, steps, []);
+        new("p", "P", "s", "Owner/Repo", "blender", null, "dcc", asset, steps, [], []);
 
     [Fact]
     public void A_matching_variant_overrides_the_asset_and_steps()
@@ -23,9 +23,9 @@ public class PlanResolverTests
             Variants =
             [
                 new PluginVariant("2.", "GIMP2_TEX_Plugin_Windows.zip",
-                    [new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins")]),
+                    [new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins")], []),
                 new PluginVariant("3.", "GIMP3_TEX_Plugin_Windows.zip",
-                    [new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins/gimp3_tex_plugin")])
+                    [new InstallStep(StepVerb.CopyDir, ".", "{host}/plug-ins/gimp3_tex_plugin")], [])
             ]
         };
         var host = new HostInstance("gimp", "2.10", "GIMP 2.10", @"C:\gimp\2.10");

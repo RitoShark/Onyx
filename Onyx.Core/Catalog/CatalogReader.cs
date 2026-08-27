@@ -42,6 +42,7 @@ public static class CatalogReader
                 var variants = p.TryGetProperty("variants", out var vs) && vs.ValueKind == JsonValueKind.Array
                     ? vs.EnumerateArray().Select(v => ReadVariant(id, v)).ToList()
                     : [];
+                var detect = Strings(p, "detect");
 
                 plugins.Add(new PluginEntry(
                     id,
@@ -53,7 +54,8 @@ public static class CatalogReader
                     Opt(p, "category") ?? "misc",
                     Str(p, "asset"),
                     steps,
-                    variants));
+                    variants,
+                    detect));
             }
 
             if (plugins.Count == 0)
@@ -69,8 +71,13 @@ public static class CatalogReader
         if (steps.Count == 0)
             throw new CatalogException($"A variant of plugin '{pluginId}' has no install steps.");
 
-        return new PluginVariant(Str(e, "instancePrefix"), Str(e, "asset"), steps);
+        return new PluginVariant(Str(e, "instancePrefix"), Str(e, "asset"), steps, Strings(e, "detect"));
     }
+
+    static IReadOnlyList<string> Strings(JsonElement e, string name) =>
+        e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Array
+            ? v.EnumerateArray().Select(x => x.GetString()!).ToList()
+            : [];
 
     static InstallStep ReadStep(JsonElement e)
     {

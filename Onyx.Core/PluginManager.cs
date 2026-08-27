@@ -44,6 +44,7 @@ public sealed class PluginManager(
     InstallEngine engine,
     ProcessGuard guard,
     StateStore state,
+    IFileSystem detectFs,
     IElevator? elevator = null,
     IReadOnlyList<IPresenceProbe>? probes = null)
 {
@@ -93,9 +94,13 @@ public sealed class PluginManager(
         if (installed is not null)
             return new PluginTarget(host, installed, ReleaseSet.UpdateAvailable(installed, latest), false);
 
-        var external = probe?.DetectInstalled(host.Path);
-        return external is not null
-            ? new PluginTarget(host, "detected", latest is not null, true)
+        var found = probe?.DetectInstalled(host.Path) is not null
+                    || plugin.DetectFor(host.InstanceId)
+                        .Any(marker => detectFs.FileExists(
+                            Path.Combine(host.Path, marker.Replace('/', Path.DirectorySeparatorChar))));
+
+        return found
+            ? new PluginTarget(host, "installed", latest is not null, true)
             : new PluginTarget(host, null, false, false);
     }
 

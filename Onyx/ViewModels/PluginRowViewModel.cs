@@ -24,7 +24,7 @@ public sealed class TargetViewModel(PluginTarget target)
     public string Path => target.Host.Path;
 
     public string Status =>
-        target.External ? "detected" : target.InstalledTag ?? "not installed";
+        target.External ? "found" : target.InstalledTag ?? "not installed";
 
     public bool Installed => target.InstalledTag is not null;
 

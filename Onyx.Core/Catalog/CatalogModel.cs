@@ -4,7 +4,11 @@ public enum StepVerb { Copy, CopyDir, Regsvr32, Sha256 }
 
 public sealed record InstallStep(StepVerb Verb, string? From, string? To);
 
-public sealed record PluginVariant(string InstancePrefix, string Asset, IReadOnlyList<InstallStep> Steps);
+public sealed record PluginVariant(
+    string InstancePrefix,
+    string Asset,
+    IReadOnlyList<InstallStep> Steps,
+    IReadOnlyList<string> DetectPaths);
 
 public sealed record PluginEntry(
     string Id,
@@ -16,7 +20,8 @@ public sealed record PluginEntry(
     string Category,
     string Asset,
     IReadOnlyList<InstallStep> Steps,
-    IReadOnlyList<PluginVariant> Variants)
+    IReadOnlyList<PluginVariant> Variants,
+    IReadOnlyList<string> DetectPaths)
 {
     public bool Supports(string instanceId) =>
         Variants.Count == 0 || Variants.Any(v => instanceId.StartsWith(v.InstancePrefix, StringComparison.Ordinal));
@@ -25,6 +30,12 @@ public sealed record PluginEntry(
     {
         var variant = Variants.FirstOrDefault(v => instanceId.StartsWith(v.InstancePrefix, StringComparison.Ordinal));
         return variant is null ? (Asset, Steps) : (variant.Asset, variant.Steps);
+    }
+
+    public IReadOnlyList<string> DetectFor(string instanceId)
+    {
+        var variant = Variants.FirstOrDefault(v => instanceId.StartsWith(v.InstancePrefix, StringComparison.Ordinal));
+        return variant is { DetectPaths.Count: > 0 } ? variant.DetectPaths : DetectPaths;
     }
 }
 

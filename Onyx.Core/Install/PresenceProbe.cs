@@ -23,13 +23,3 @@ public sealed class ThumbnailPresenceProbe(IRegistry registry, IFileSystem fs) :
     }
 }
 
-public sealed class HematitePresenceProbe(IFileSystem fs) : IPresenceProbe
-{
-    public string PluginId => "hematite";
-
-    public string? DetectInstalled(string hostPath)
-    {
-        var exe = Path.Combine(hostPath, "hematite-cli.exe");
-        return fs.FileExists(exe) ? exe : null;
-    }
-}

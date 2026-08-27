@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": 3,
+  "revision": 4,
   "plugins": [
     {
       "id": "ritotex-photoshop",
@@ -13,10 +13,14 @@
         {
           "verb": "copy",
           "from": "RitoTex.8bi",
-          "to": "{host}/Plug-ins/RitoTex.8bi"
+          "to": "{host}/Required/Plug-ins/File Formats/RitoTex.8bi"
         }
       ],
-      "category": "textures"
+      "category": "textures",
+      "detect": [
+        "Required/Plug-ins/File Formats/RitoTex.8bi",
+        "Plug-ins/RitoTex.8bi"
+      ]
     },
     {
       "id": "tex-paintnet",
@@ -32,7 +36,10 @@
           "to": "{host}/FileTypes"
         }
       ],
-      "category": "textures"
+      "category": "textures",
+      "detect": [
+        "FileTypes/TexFileType.dll"
+      ]
     },
     {
       "id": "tex-gimp",
@@ -59,6 +66,9 @@
               "from": ".",
               "to": "{host}/plug-ins"
             }
+          ],
+          "detect": [
+            "plug-ins/gimp2_tex_plugin.py"
           ]
         },
         {
@@ -70,6 +80,9 @@
               "from": ".",
               "to": "{host}/plug-ins/gimp3_tex_plugin"
             }
+          ],
+          "detect": [
+            "plug-ins/gimp3_tex_plugin/gimp3_tex_plugin.py"
           ]
         }
       ]
@@ -103,7 +116,10 @@
           "to": "{host}/scripts/ritoshark"
         }
       ],
-      "category": "dcc"
+      "category": "dcc",
+      "detect": [
+        "plug-ins/ritoshark_plugin.py"
+      ]
     },
     {
       "id": "aventurine-blender",
@@ -119,7 +135,10 @@
           "to": "{host}/scripts/addons/Aventurine"
         }
       ],
-      "category": "dcc"
+      "category": "dcc",
+      "detect": [
+        "scripts/addons/Aventurine/__init__.py"
+      ]
     },
     {
       "id": "tex-thumbnails",
@@ -143,7 +162,10 @@
           "to": "{host}/TexThumbnailProvider.dll"
         }
       ],
-      "category": "system"
+      "category": "system",
+      "detect": [
+        "TexThumbnailProvider.dll"
+      ]
     },
     {
       "id": "hematite",
@@ -159,6 +181,9 @@
           "from": "hematite-cli.exe",
           "to": "{host}/hematite-cli.exe"
         }
+      ],
+      "detect": [
+        "hematite-cli.exe"
       ]
     }
   ]
