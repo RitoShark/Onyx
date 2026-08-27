@@ -26,5 +26,6 @@ public interface IKnownFolders
     string LocalAppData { get; }
     string Documents { get; }
     string UserProfile { get; }
+    string ProgramFiles { get; }
     string? Variable(string name);
 }

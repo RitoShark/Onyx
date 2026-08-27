@@ -80,6 +80,11 @@ public sealed class PluginRowViewModel : ObservableObject
     public string HostPath =>
         _status.Targets.Count == 1 ? "  ·  " + _status.Targets[0].Host.Path : "";
 
+    public System.Windows.Media.ImageSource? IconImage =>
+        IconStore.For(_status.Plugin.Host, _status.Targets.Select(t => t.Host.ExePath).FirstOrDefault(e => e is not null));
+
+    public bool HasIconImage => IconImage is not null;
+
     public string IconGeometry => _status.Plugin.Host switch
     {
         "photoshop" => "M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z M 13.0,6.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0 M 17.0,10.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0 M 6.0,12.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0 M 8.0,7.5 a 0.5,0.5 0 1 0 1.0,0 a 0.5,0.5 0 1 0 -1.0,0",

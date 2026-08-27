@@ -18,6 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Onyx.Core\Onyx.Core.csproj" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\hematite-logo.png" />
   </ItemGroup>
 
 </Project>

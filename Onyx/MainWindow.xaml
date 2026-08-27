@@ -189,6 +189,12 @@
                                         Background="{DynamicResource SurfaceSunken}"
                                         BorderBrush="{DynamicResource Separator}"
                                         BorderThickness="1" />
+                                <Image Source="{Binding IconImage}"
+                                       Width="26" Height="26"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Visibility="{Binding HasIconImage, Converter={StaticResource BoolToVisibility}}" />
                                 <Path Data="{Binding IconGeometry}"
                                       Stroke="{DynamicResource Accent}"
                                       StrokeThickness="1.7"
@@ -198,7 +204,8 @@
                                       Width="20" Height="20"
                                       Stretch="Uniform"
                                       HorizontalAlignment="Center"
-                                      VerticalAlignment="Center" />
+                                      VerticalAlignment="Center"
+                                      Visibility="{Binding HasIconImage, Converter={StaticResource InverseBoolToVisibility}}" />
                             </Grid>
 
                             <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">

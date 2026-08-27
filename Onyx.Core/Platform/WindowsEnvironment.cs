@@ -55,5 +55,6 @@ public sealed class KnownFolders : IKnownFolders
     public string LocalAppData => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
     public string Documents => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     public string UserProfile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    public string ProgramFiles => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
     public string? Variable(string name) => Environment.GetEnvironmentVariable(name);
 }

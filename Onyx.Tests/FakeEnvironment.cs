@@ -83,7 +83,8 @@ public sealed record FakeFolders(
     string AppData,
     string LocalAppData,
     string Documents,
-    string UserProfile) : IKnownFolders
+    string UserProfile,
+    string ProgramFiles = @"C:\Program Files") : IKnownFolders
 {
     public Dictionary<string, string> Variables { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 
