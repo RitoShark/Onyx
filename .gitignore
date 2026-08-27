@@ -1,0 +1,17 @@
+CLAUDE.md
+
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+artifacts/
+*.user
+*.suo
+.vs/
+.idea/
+
+*.zip
+*.8bi
+*.dll
+*.exe
