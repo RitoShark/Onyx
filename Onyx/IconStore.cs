@@ -9,18 +9,32 @@ public static class IconStore
 {
     static readonly Dictionary<string, ImageSource?> Cache = new(StringComparer.OrdinalIgnoreCase);
 
-    static readonly Lazy<ImageSource> HematiteLogo = new(() =>
-        new BitmapImage(new Uri("pack://application:,,,/Assets/hematite-logo.png")));
+    static readonly Dictionary<string, Lazy<ImageSource>> Bundled = new(StringComparer.Ordinal)
+    {
+        ["hematite"] = Packed("hematite-logo.png"),
+        ["blender"] = Packed("blender-logo.png"),
+        ["gimp"] = Packed("gimp-logo.png")
+    };
+
+    static Lazy<ImageSource> Packed(string file) =>
+        new(() => new BitmapImage(new Uri($"pack://application:,,,/Assets/{file}")));
 
     public static ImageSource? For(string hostId, string? exePath)
     {
-        if (hostId == "hematite") return HematiteLogo.Value;
-        if (exePath is null) return null;
+        if (hostId == "hematite") return Bundled["hematite"].Value;
 
-        if (Cache.TryGetValue(exePath, out var cached)) return cached;
+        if (exePath is null)
+            return Bundled.TryGetValue(hostId, out var bundled) ? bundled.Value : null;
 
-        var image = Extract(exePath);
-        Cache[exePath] = image;
+        if (!Cache.TryGetValue(exePath, out var image))
+        {
+            image = Extract(exePath);
+            Cache[exePath] = image;
+        }
+
+        if (image is null && Bundled.TryGetValue(hostId, out var fallback))
+            return fallback.Value;
+
         return image;
     }
 

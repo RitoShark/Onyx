@@ -15,7 +15,7 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Border Width="30" Height="30" CornerRadius="7"
+                <Border Width="30" Height="30" CornerRadius="8"
                         Background="{DynamicResource SurfaceSunken}"
                         BorderBrush="{DynamicResource Separator}"
                         BorderThickness="1" />

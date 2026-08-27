@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\hematite-logo.png" />
+    <Resource Include="Assets\blender-logo.png" />
+    <Resource Include="Assets\gimp-logo.png" />
   </ItemGroup>
 
 </Project>

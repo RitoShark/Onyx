@@ -56,7 +56,7 @@
         <Setter Property="Background" Value="{DynamicResource AccentGradient}" />
         <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Tag" Value="6" />
+        <Setter Property="Tag" Value="8" />
         <Setter Property="Padding" Value="16,0" />
         <Setter Property="MinWidth" Value="92" />
         <Setter Property="Height" Value="30" />
@@ -95,7 +95,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Tag" Value="5" />
+        <Setter Property="Tag" Value="7" />
         <Setter Property="Width" Value="30" />
         <Setter Property="Height" Value="26" />
         <Setter Property="Padding" Value="0" />
@@ -142,7 +142,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
-                    <Border x:Name="Shell" Background="Transparent" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Shell" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
                         <ContentPresenter VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -173,7 +173,10 @@
                                       IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border Background="{DynamicResource Control}" CornerRadius="6" SnapsToDevicePixels="True">
+                                    <Border Background="{DynamicResource Control}"
+                                            CornerRadius="8"
+                                            TextElement.Foreground="{DynamicResource TextPrimary}"
+                                            SnapsToDevicePixels="True">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
@@ -210,7 +213,7 @@
                             <Border Background="{DynamicResource SurfaceRaised}"
                                     BorderBrush="{DynamicResource Separator}"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="10"
                                     Padding="4"
                                     MinWidth="{TemplateBinding ActualWidth}"
                                     MaxHeight="280">

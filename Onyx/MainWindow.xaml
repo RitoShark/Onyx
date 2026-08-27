@@ -136,7 +136,7 @@
                         Background="{DynamicResource SurfaceRaised}"
                         BorderBrush="{DynamicResource SeparatorStrong}"
                         BorderThickness="1"
-                        CornerRadius="12"
+                        CornerRadius="14"
                         Padding="22"
                         Width="520"
                         MaxHeight="640"
@@ -185,7 +185,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Grid Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Border Width="38" Height="38" CornerRadius="9"
+                                <Border Width="38" Height="38" CornerRadius="10"
                                         Background="{DynamicResource SurfaceSunken}"
                                         BorderBrush="{DynamicResource Separator}"
                                         BorderThickness="1" />
@@ -250,7 +250,7 @@
                                     <Border Background="{DynamicResource SurfaceSunken}"
                                             BorderBrush="{DynamicResource Separator}"
                                             BorderThickness="1"
-                                            CornerRadius="7"
+                                            CornerRadius="8"
                                             Padding="10,7"
                                             Margin="0,0,0,6">
                                         <Grid>
@@ -310,7 +310,7 @@
                                 Background="{DynamicResource Surface}"
                                 BorderBrush="{DynamicResource Separator}"
                                 BorderThickness="1"
-                                CornerRadius="7"
+                                CornerRadius="8"
                                 Padding="12,10"
                                 MinHeight="70">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -351,7 +351,7 @@
                 <Border Background="{DynamicResource SurfaceRaised}"
                         BorderBrush="{DynamicResource SeparatorStrong}"
                         BorderThickness="1"
-                        CornerRadius="12"
+                        CornerRadius="14"
                         Padding="24"
                         Width="420"
                         VerticalAlignment="Center"
