@@ -64,6 +64,65 @@ public class GitHubClientTests
             () => client.ListReleasesAsync("RitoShark/Flint", default));
     }
 
+    static HttpResponseMessage RateLimited()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new StringContent("{}") };
+        response.Headers.Add("X-RateLimit-Remaining", "0");
+        return response;
+    }
+
+    const string Feed =
+        "<feed xmlns=\"http://www.w3.org/2005/Atom\">" +
+        "<entry><id>tag:github.com,2008:Repository/1/v0.6.0</id><updated>2026-08-25T10:00:00Z</updated></entry>" +
+        "<entry><id>tag:github.com,2008:Repository/1/v0.6.1</id><updated>2026-08-25T22:55:58Z</updated></entry>" +
+        "</feed>";
+
+    [Fact]
+    public async Task A_rate_limit_without_a_cache_falls_back_to_the_release_feed()
+    {
+        var handler = new StubHandler(request =>
+            request.RequestUri!.Host == "github.com"
+                ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Feed) }
+                : RateLimited());
+
+        var releases = await new GitHubClient(new HttpClient(handler))
+            .ListReleasesAsync("RitoShark/Hematite", default);
+
+        Assert.Equal(["v0.6.1", "v0.6.0"], releases.Select(r => r.Tag));
+        Assert.All(releases, r => Assert.Empty(r.Assets));
+        Assert.Contains(handler.Requests, r => r.RequestUri!.AbsolutePath.EndsWith("releases.atom"));
+    }
+
+    [Fact]
+    public async Task A_rate_limit_with_a_dead_feed_still_reports_the_rate_limit()
+    {
+        var handler = new StubHandler(request =>
+            request.RequestUri!.Host == "github.com"
+                ? new HttpResponseMessage(HttpStatusCode.NotFound)
+                : RateLimited());
+
+        await Assert.ThrowsAsync<RateLimitedException>(
+            () => new GitHubClient(new HttpClient(handler)).ListReleasesAsync("RitoShark/Hematite", default));
+    }
+
+    [Fact]
+    public async Task Assets_are_scraped_from_the_expanded_assets_page()
+    {
+        const string html =
+            "<div><a href=\"/RitoShark/Hematite/releases/download/v0.6.1/hematite-cli.exe\" rel=\"nofollow\">x</a>" +
+            "<a href=\"/RitoShark/Hematite/releases/download/v0.6.1/hematite-cli-windows-x64.zip\">y</a>" +
+            "<a href=\"/RitoShark/Hematite/archive/refs/tags/v0.6.1.zip\">source</a></div>";
+
+        var handler = StubHandler.Json(html);
+
+        var assets = await new GitHubClient(new HttpClient(handler))
+            .ListAssetsAsync("RitoShark/Hematite", "v0.6.1", default);
+
+        Assert.Equal(2, assets.Count);
+        Assert.Equal("hematite-cli.exe", assets[0].Name);
+        Assert.Equal("https://github.com/RitoShark/Hematite/releases/download/v0.6.1/hematite-cli.exe", assets[0].DownloadUrl);
+    }
+
     [Fact]
     public async Task A_plain_forbidden_is_not_mistaken_for_a_rate_limit()
     {

@@ -130,6 +130,9 @@ public sealed class PluginManager(
         var release = releases.FirstOrDefault(r => r.Tag == tag)
             ?? throw new PlanException($"{plugin.Name} has no release tagged '{tag}'.");
 
+        if (release.Assets.Count == 0)
+            release = release with { Assets = await github.ListAssetsAsync(plugin.Repo, release.Tag, ct) };
+
         var plan = PlanResolver.Resolve(plugin, host, release);
 
         await UninstallAsync(plugin.Id, host.InstanceId, ct);

@@ -1,6 +1,9 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace Onyx.Core.Releases;
 
@@ -22,11 +25,61 @@ public sealed class GitHubClient(HttpClient http, IReleaseCache? cache = null)
         {
             return await FetchAsync(repo, cached, ct);
         }
-        catch (Exception e) when (cached is not null &&
-                                  e is RateLimitedException or HttpRequestException or TaskCanceledException)
+        catch (Exception e) when (e is RateLimitedException or HttpRequestException or TaskCanceledException)
         {
-            return Parse(cached.Value.Json);
+            if (cached is not null) return Parse(cached.Value.Json);
+
+            try
+            {
+                return await FetchFeedAsync(repo, ct);
+            }
+            catch (Exception)
+            {
+                throw e;
+            }
         }
+    }
+
+    public async Task<IReadOnlyList<ReleaseAsset>> ListAssetsAsync(string repo, string tag, CancellationToken ct)
+    {
+        var html = await GetWebAsync($"https://github.com/{repo}/releases/expanded_assets/{Uri.EscapeDataString(tag)}", ct);
+        var prefix = $"/{repo}/releases/download/";
+
+        return Regex.Matches(html, "href=\"(/[^\"]+/releases/download/[^\"]+)\"")
+            .Select(m => m.Groups[1].Value)
+            .Where(path => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .Select(path => new ReleaseAsset(
+                WebUtility.UrlDecode(path[(path.LastIndexOf('/') + 1)..]),
+                $"https://github.com{path}",
+                0))
+            .ToList();
+    }
+
+    async Task<IReadOnlyList<Release>> FetchFeedAsync(string repo, CancellationToken ct)
+    {
+        var xml = await GetWebAsync($"https://github.com/{repo}/releases.atom", ct);
+        var ns = (XNamespace)"http://www.w3.org/2005/Atom";
+
+        return XDocument.Parse(xml).Root!
+            .Elements(ns + "entry")
+            .Select(e => new Release(
+                e.Element(ns + "id")!.Value.Split('/')[^1],
+                DateTimeOffset.Parse(e.Element(ns + "updated")!.Value, CultureInfo.InvariantCulture),
+                false,
+                "",
+                []))
+            .OrderByDescending(r => r.PublishedAt)
+            .ToList();
+    }
+
+    async Task<string> GetWebAsync(string url, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.UserAgent.Add(new ProductInfoHeaderValue("Onyx", "1.0"));
+
+        using var response = await http.SendAsync(request, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync(ct);
     }
 
     async Task<IReadOnlyList<Release>> FetchAsync(string repo, (string ETag, string Json)? cached, CancellationToken ct)
