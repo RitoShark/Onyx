@@ -8,6 +8,9 @@
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>Onyx</AssemblyName>
     <RootNamespace>Onyx</RootNamespace>

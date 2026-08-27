@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using Onyx.Core.Releases;
 
 namespace Onyx.Tests.Releases;
@@ -71,5 +72,84 @@ public class GitHubClientTests
 
         await Assert.ThrowsAsync<HttpRequestException>(
             () => client.ListReleasesAsync("RitoShark/Flint", default));
+    }
+
+    sealed class MemoryCache : IReleaseCache
+    {
+        readonly Dictionary<string, (string ETag, string Json)> _entries = new(StringComparer.Ordinal);
+
+        public (string ETag, string Json)? Get(string repo) =>
+            _entries.TryGetValue(repo, out var entry) ? entry : null;
+
+        public void Put(string repo, string etag, string json) => _entries[repo] = (etag, json);
+    }
+
+    [Fact]
+    public async Task A_first_call_stores_the_etag()
+    {
+        var cache = new MemoryCache();
+        var handler = new StubHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(Fixture("releases-texthumbnailprovider.json"))
+            };
+            response.Headers.ETag = new EntityTagHeaderValue("\"abc123\"");
+            return response;
+        });
+
+        await new GitHubClient(new HttpClient(handler), cache)
+            .ListReleasesAsync("RitoShark/TexThumbnailProvider", default);
+
+        Assert.Equal("\"abc123\"", cache.Get("RitoShark/TexThumbnailProvider")!.Value.ETag);
+    }
+
+    [Fact]
+    public async Task A_second_call_sends_the_etag_and_serves_a_304_from_cache()
+    {
+        var cache = new MemoryCache();
+        cache.Put("RitoShark/TexThumbnailProvider", "\"abc123\"", Fixture("releases-texthumbnailprovider.json"));
+
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.NotModified));
+
+        var releases = await new GitHubClient(new HttpClient(handler), cache)
+            .ListReleasesAsync("RitoShark/TexThumbnailProvider", default);
+
+        Assert.Contains(releases, r => r.Tag == "v1.1.0");
+        Assert.Equal("\"abc123\"", Assert.Single(handler.Requests).Headers.GetValues("If-None-Match").Single());
+    }
+
+    [Fact]
+    public async Task A_rate_limit_falls_back_to_the_cache_instead_of_throwing()
+    {
+        var cache = new MemoryCache();
+        cache.Put("RitoShark/TexThumbnailProvider", "\"abc123\"", Fixture("releases-texthumbnailprovider.json"));
+
+        var handler = new StubHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new StringContent("{}") };
+            response.Headers.Add("X-RateLimit-Remaining", "0");
+            return response;
+        });
+
+        var releases = await new GitHubClient(new HttpClient(handler), cache)
+            .ListReleasesAsync("RitoShark/TexThumbnailProvider", default);
+
+        Assert.Contains(releases, r => r.Tag == "v1.1.0");
+    }
+
+    [Fact]
+    public async Task A_rate_limit_with_no_cache_still_throws()
+    {
+        var handler = new StubHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new StringContent("{}") };
+            response.Headers.Add("X-RateLimit-Remaining", "0");
+            return response;
+        });
+
+        await Assert.ThrowsAsync<RateLimitedException>(
+            () => new GitHubClient(new HttpClient(handler), new MemoryCache())
+                .ListReleasesAsync("RitoShark/Flint", default));
     }
 }
