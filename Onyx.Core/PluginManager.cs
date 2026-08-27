@@ -7,16 +7,33 @@ using Onyx.Core.State;
 
 namespace Onyx.Core;
 
+public sealed record PluginTarget(
+    HostInstance Host,
+    string? InstalledTag,
+    bool UpdateAvailable,
+    bool External);
+
 public sealed record PluginStatus(
     PluginEntry Plugin,
-    HostInstance? Host,
-    string? InstalledTag,
+    IReadOnlyList<PluginTarget> Targets,
     Release? Latest,
     IReadOnlyList<Release> Releases,
-    bool UpdateAvailable,
     string? Problem)
 {
-    public bool Installed => InstalledTag is not null;
+    public bool HasHost => Targets.Count > 0;
+
+    public bool Installed => Targets.Any(t => t.InstalledTag is not null);
+
+    public bool UpdateAvailable => Targets.Any(t => t.UpdateAvailable);
+
+    public string? InstalledTag
+    {
+        get
+        {
+            var tags = Targets.Select(t => t.InstalledTag).OfType<string>().Distinct().ToList();
+            return tags.Count switch { 0 => null, 1 => tags[0], _ => "mixed" };
+        }
+    }
 }
 
 public sealed class PluginManager(
@@ -27,9 +44,11 @@ public sealed class PluginManager(
     InstallEngine engine,
     ProcessGuard guard,
     StateStore state,
-    IElevator? elevator = null)
+    IElevator? elevator = null,
+    IReadOnlyList<IPresenceProbe>? probes = null)
 {
     readonly Dictionary<string, IReadOnlyList<Release>> _releases = new(StringComparer.Ordinal);
+    readonly IReadOnlyList<IPresenceProbe> _probes = probes ?? [];
 
     public Catalog.Catalog Catalog => catalog;
     public HostRegistry Hosts => hosts;
@@ -56,34 +75,52 @@ public sealed class PluginManager(
             }
 
             var latest = ReleaseSet.Latest(releases, includePrerelease: false);
+            var probe = _probes.FirstOrDefault(p => p.PluginId == plugin.Id);
 
-            var instances = hosts.For(plugin.Host)
-                .Where(h => plugin.HostInstance is null || h.InstanceId == plugin.HostInstance)
+            var targets = InstancesFor(plugin)
+                .Select(host => Target(plugin, host, latest, probe))
                 .ToList();
 
-            if (instances.Count == 0)
-            {
-                statuses.Add(new PluginStatus(plugin, null, null, latest, releases, false, problem));
-                continue;
-            }
-
-            foreach (var host in instances)
-            {
-                var installed = state.Find(plugin.Id, host.InstanceId)?.Tag;
-                statuses.Add(new PluginStatus(
-                    plugin, host, installed, latest, releases,
-                    ReleaseSet.UpdateAvailable(installed, latest), problem));
-            }
+            statuses.Add(new PluginStatus(plugin, targets, latest, releases, problem));
         }
 
         return statuses;
     }
 
-    public async Task InstallAsync(string pluginId, string instanceId, string tag, CancellationToken ct)
+    PluginTarget Target(PluginEntry plugin, HostInstance host, Release? latest, IPresenceProbe? probe)
+    {
+        var installed = state.Find(plugin.Id, host.InstanceId)?.Tag;
+        if (installed is not null)
+            return new PluginTarget(host, installed, ReleaseSet.UpdateAvailable(installed, latest), false);
+
+        var external = probe?.DetectInstalled(host.Path);
+        return external is not null
+            ? new PluginTarget(host, "detected", latest is not null, true)
+            : new PluginTarget(host, null, false, false);
+    }
+
+    public async Task InstallAsync(string pluginId, string tag, CancellationToken ct)
+    {
+        var plugin = Find(pluginId);
+        var instances = InstancesFor(plugin);
+        if (instances.Count == 0)
+            throw new PlanException($"{plugin.Name} has no detected install target.");
+
+        RequireClosed(plugin.Host, instances[0].Label);
+
+        foreach (var host in instances)
+            await InstallIntoAsync(plugin, host, tag, ct);
+    }
+
+    public async Task InstallIntoAsync(string pluginId, string instanceId, string tag, CancellationToken ct)
     {
         var (plugin, host) = Locate(pluginId, instanceId);
         RequireClosed(plugin.Host, host.Label);
+        await InstallIntoAsync(plugin, host, tag, ct);
+    }
 
+    async Task InstallIntoAsync(PluginEntry plugin, HostInstance host, string tag, CancellationToken ct)
+    {
         var releases = await ReleasesAsync(plugin.Repo, ct);
         var release = releases.FirstOrDefault(r => r.Tag == tag)
             ?? throw new PlanException($"{plugin.Name} has no release tagged '{tag}'.");
@@ -127,12 +164,15 @@ public sealed class PluginManager(
         catch (IOException) { }
     }
 
-    public void UninstallAsync(string pluginId, string instanceId)
+    public void UninstallAll(string pluginId)
     {
-        var (plugin, host) = Locate(pluginId, instanceId);
-        RequireClosed(plugin.Host, host.Label);
+        var plugin = Find(pluginId);
+        var instances = InstancesFor(plugin);
+        if (instances.Count > 0) RequireClosed(plugin.Host, instances[0].Label);
 
-        Uninstall(pluginId, instanceId);
+        foreach (var host in instances)
+            Uninstall(pluginId, host.InstanceId);
+
         state.Save();
     }
 
@@ -152,12 +192,20 @@ public sealed class PluginManager(
             throw new HostRunningException(hostLabel, running.Select(p => p.Name).Distinct().ToList());
     }
 
-    (PluginEntry Plugin, HostInstance Host) Locate(string pluginId, string instanceId)
-    {
-        var plugin = catalog.Plugins.FirstOrDefault(p => p.Id == pluginId)
+    IReadOnlyList<HostInstance> InstancesFor(PluginEntry plugin) =>
+        hosts.For(plugin.Host)
+            .Where(h => plugin.HostInstance is null || h.InstanceId == plugin.HostInstance)
+            .ToList();
+
+    PluginEntry Find(string pluginId) =>
+        catalog.Plugins.FirstOrDefault(p => p.Id == pluginId)
             ?? throw new PlanException($"No plugin '{pluginId}' in the catalog.");
 
-        var host = hosts.For(plugin.Host).FirstOrDefault(h => h.InstanceId == instanceId)
+    (PluginEntry Plugin, HostInstance Host) Locate(string pluginId, string instanceId)
+    {
+        var plugin = Find(pluginId);
+
+        var host = InstancesFor(plugin).FirstOrDefault(h => h.InstanceId == instanceId)
             ?? throw new PlanException($"{plugin.Name} has no detected host '{instanceId}'.");
 
         return (plugin, host);

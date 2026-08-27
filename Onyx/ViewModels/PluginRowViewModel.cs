@@ -18,10 +18,28 @@ public sealed class VersionChoice(Release release)
         : $"{Release.Tag}  ·  {Release.PublishedAt.LocalDateTime:d MMM yyyy}";
 }
 
+public sealed class TargetViewModel(PluginTarget target)
+{
+    public string Label => target.Host.Label;
+    public string Path => target.Host.Path;
+
+    public string Status =>
+        target.External ? "detected" : target.InstalledTag ?? "not installed";
+
+    public bool Installed => target.InstalledTag is not null;
+
+    public RelayCommand OpenCommand { get; } = new(() =>
+    {
+        if (Directory.Exists(target.Host.Path))
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{target.Host.Path}\"") { UseShellExecute = true });
+        return Task.CompletedTask;
+    });
+}
+
 public sealed class PluginRowViewModel : ObservableObject
 {
     readonly MainViewModel _owner;
-    PluginStatus _status;
+    readonly PluginStatus _status;
     VersionChoice? _selectedVersion;
     bool _isExpanded;
     bool _isBusy;
@@ -34,9 +52,10 @@ public sealed class PluginRowViewModel : ObservableObject
         Versions = new ObservableCollection<VersionChoice>(status.Releases.Select(r => new VersionChoice(r)));
         _selectedVersion = Versions.FirstOrDefault(v => v.Tag == status.InstalledTag) ?? Versions.FirstOrDefault();
 
+        Targets = new ObservableCollection<TargetViewModel>(status.Targets.Select(t => new TargetViewModel(t)));
+
         InstallCommand = new RelayCommand(InstallAsync, () => CanAct);
         UninstallCommand = new RelayCommand(UninstallAsync, () => Installed && !IsBusy);
-        RevealCommand = new RelayCommand(Reveal, () => HasHost);
         ChooseFolderCommand = new RelayCommand(ChooseFolderAsync, () => !IsBusy);
         ToggleCommand = new RelayCommand(() =>
         {
@@ -45,16 +64,21 @@ public sealed class PluginRowViewModel : ObservableObject
         });
     }
 
-    public string Key => $"{_status.Plugin.Id}|{_status.Host?.InstanceId}";
     public string Name => _status.Plugin.Name;
     public string Summary => _status.Plugin.Summary;
-    public string Repo => _status.Plugin.Repo;
+    public string Category => _status.Plugin.Category;
 
-    public string HostLabel => _status.Host is null
-        ? $"{HostDisplayName(_status.Plugin.Host)} not found"
-        : _status.Host.Label;
+    public ObservableCollection<TargetViewModel> Targets { get; }
 
-    public string HostPath => _status.Host is null ? "" : "  ·  " + _status.Host.Path;
+    public string HostLabel => _status.Targets.Count switch
+    {
+        0 => $"{HostDisplayName(_status.Plugin.Host)} not found",
+        1 => _status.Targets[0].Host.Label,
+        _ => string.Join("  ·  ", _status.Targets.Select(t => t.Host.Label))
+    };
+
+    public string HostPath =>
+        _status.Targets.Count == 1 ? "  ·  " + _status.Targets[0].Host.Path : "";
 
     public string IconGeometry => _status.Plugin.Host switch
     {
@@ -64,12 +88,12 @@ public sealed class PluginRowViewModel : ObservableObject
         "maya" => "M 2,13 L 5,3 L 8,10 L 11,3 L 14,13",
         "blender" => "M 8,2 A 6,6 0 1 0 8,14 A 6,6 0 0 0 8,2 M 5,9 A 3,3 0 1 0 11,9 A 3,3 0 0 0 5,9",
         "thumbnails" => "M 2,3 H 14 V 13 H 2 Z M 2,10 L 6,6 L 9,9 L 11,7.5 L 14,10",
+        "hematite" => "M 2,4 H 14 V 12 H 2 Z M 4,7 L 6,9 L 4,11 M 8,11 H 12",
         _ => "M 3,10 L 8,4 L 13,10"
     };
-    public bool HasHost => _status.Host is not null;
+
+    public bool HasHost => _status.HasHost;
     public bool Installed => _status.Installed;
-    public string? InstalledTag => _status.InstalledTag;
-    public string? Problem => _status.Problem;
 
     public string VersionChip => _status.InstalledTag ?? _status.Latest?.Tag ?? "—";
 
@@ -81,6 +105,8 @@ public sealed class PluginRowViewModel : ObservableObject
     public bool ShowsUpdateBadge => _status.UpdateAvailable;
 
     public bool CanAct => HasHost && Versions.Count > 0 && !IsBusy;
+
+    public bool ShowsChooseFolder => _status.Targets.Count <= 1;
 
     public ObservableCollection<VersionChoice> Versions { get; }
 
@@ -124,40 +150,25 @@ public sealed class PluginRowViewModel : ObservableObject
 
     public RelayCommand InstallCommand { get; }
     public RelayCommand UninstallCommand { get; }
-    public RelayCommand RevealCommand { get; }
     public RelayCommand ChooseFolderCommand { get; }
     public RelayCommand ToggleCommand { get; }
 
-    async Task ChooseFolderAsync()
-    {
-        var dialog = new OpenFolderDialog
-        {
-            Title = $"Choose the {HostDisplayName(_status.Plugin.Host)} folder",
-            InitialDirectory = _status.Host?.Path ?? ""
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        var instanceId = _status.Host?.InstanceId ?? HostOverrides.ManualInstance;
-        _owner.Services.Manager.Hosts.Overrides.Set(_status.Plugin.Host, instanceId, dialog.FolderName);
-
-        await _owner.RefreshAsync(fromNetwork: false);
-    }
-
     bool SelectedIsInstalled => SelectedVersion?.Tag == _status.InstalledTag;
+
+    string HostDisplay => HostDisplayName(_status.Plugin.Host);
 
     async Task InstallAsync()
     {
-        if (_status.Host is null || SelectedVersion is null) return;
+        if (SelectedVersion is null) return;
 
         IsBusy = true;
         try
         {
             await _owner.RunGuardedAsync(
                 _status.Plugin.Host,
-                HostLabel,
+                HostDisplay,
                 () => _owner.Services.Manager.InstallAsync(
-                    _status.Plugin.Id, _status.Host.InstanceId, SelectedVersion.Tag, CancellationToken.None));
+                    _status.Plugin.Id, SelectedVersion.Tag, CancellationToken.None));
         }
         finally
         {
@@ -167,17 +178,15 @@ public sealed class PluginRowViewModel : ObservableObject
 
     async Task UninstallAsync()
     {
-        if (_status.Host is null) return;
-
         IsBusy = true;
         try
         {
             await _owner.RunGuardedAsync(
                 _status.Plugin.Host,
-                HostLabel,
+                HostDisplay,
                 () =>
                 {
-                    _owner.Services.Manager.UninstallAsync(_status.Plugin.Id, _status.Host.InstanceId);
+                    _owner.Services.Manager.UninstallAll(_status.Plugin.Id);
                     return Task.CompletedTask;
                 });
         }
@@ -187,13 +196,20 @@ public sealed class PluginRowViewModel : ObservableObject
         }
     }
 
-    Task Reveal()
+    async Task ChooseFolderAsync()
     {
-        var path = _status.Host?.Path;
-        if (path is not null && Directory.Exists(path))
-            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+        var dialog = new OpenFolderDialog
+        {
+            Title = $"Choose the {HostDisplay} folder",
+            InitialDirectory = _status.Targets.FirstOrDefault()?.Host.Path ?? ""
+        };
 
-        return Task.CompletedTask;
+        if (dialog.ShowDialog() != true) return;
+
+        var instanceId = _status.Targets.FirstOrDefault()?.Host.InstanceId ?? HostOverrides.ManualInstance;
+        _owner.Services.Manager.Hosts.Overrides.Set(_status.Plugin.Host, instanceId, dialog.FolderName);
+
+        await _owner.RefreshAsync(fromNetwork: false);
     }
 
     static string HostDisplayName(string hostId) => hostId switch
@@ -204,6 +220,7 @@ public sealed class PluginRowViewModel : ObservableObject
         "maya" => "Maya",
         "blender" => "Blender",
         "thumbnails" => "Windows Explorer",
+        "hematite" => "Hematite",
         _ => hostId
     };
 

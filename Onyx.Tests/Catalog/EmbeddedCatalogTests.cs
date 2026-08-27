@@ -10,27 +10,41 @@ public class EmbeddedCatalogTests
     [Fact]
     public void The_shipped_catalog_parses()
     {
-        Assert.Equal(7, Shipped.Plugins.Count);
+        Assert.Equal(8, Shipped.Plugins.Count);
     }
 
     [Theory]
-    [InlineData("ritotex-photoshop", "photoshop")]
-    [InlineData("tex-paintnet", "paintnet")]
-    [InlineData("tex-gimp2", "gimp")]
-    [InlineData("tex-gimp3", "gimp")]
-    [InlineData("ritoshark-maya", "maya")]
-    [InlineData("aventurine-blender", "blender")]
-    [InlineData("tex-thumbnails", "thumbnails")]
-    public void Every_expected_plugin_is_present_on_its_host(string id, string host)
+    [InlineData("ritotex-photoshop", "photoshop", "textures")]
+    [InlineData("tex-paintnet", "paintnet", "textures")]
+    [InlineData("tex-gimp2", "gimp", "textures")]
+    [InlineData("tex-gimp3", "gimp", "textures")]
+    [InlineData("ritoshark-maya", "maya", "dcc")]
+    [InlineData("aventurine-blender", "blender", "dcc")]
+    [InlineData("tex-thumbnails", "thumbnails", "system")]
+    [InlineData("hematite", "hematite", "misc")]
+    public void Every_expected_plugin_is_present_on_its_host_and_category(string id, string host, string category)
     {
-        Assert.Equal(host, Shipped.Plugins.Single(p => p.Id == id).Host);
+        var plugin = Shipped.Plugins.Single(p => p.Id == id);
+        Assert.Equal(host, plugin.Host);
+        Assert.Equal(category, plugin.Category);
     }
 
     [Fact]
     public void Every_plugin_with_a_launchable_host_has_a_process_guard()
     {
-        foreach (var plugin in Shipped.Plugins.Where(p => p.Host != "thumbnails"))
+        foreach (var plugin in Shipped.Plugins.Where(p => p.Host is not ("thumbnails" or "hematite")))
             Assert.NotEmpty(ProcessGuard.ProcessNamesFor(plugin.Host));
+    }
+
+    [Fact]
+    public void Hematite_is_a_single_exe_copied_into_a_per_user_folder()
+    {
+        var hematite = Shipped.Plugins.Single(p => p.Id == "hematite");
+        var step = Assert.Single(hematite.Steps);
+
+        Assert.Equal(StepVerb.Copy, step.Verb);
+        Assert.Equal("hematite-cli.exe", step.From);
+        Assert.Equal("{host}/hematite-cli.exe", step.To);
     }
 
     [Fact]

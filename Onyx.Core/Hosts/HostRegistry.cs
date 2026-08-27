@@ -12,7 +12,8 @@ public sealed class HostRegistry(IReadOnlyList<IHostDetector> detectors, HostOve
             new GimpDetector(fs, folders),
             new MayaDetector(registry, fs, folders),
             new BlenderDetector(fs, folders),
-            new ThumbnailHostDetector(folders)
+            new ThumbnailHostDetector(folders),
+            new HematiteHostDetector(folders)
         ], overrides);
 
     public HostOverrides Overrides => _overrides;

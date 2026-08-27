@@ -46,6 +46,7 @@ public static class CatalogReader
                     Str(p, "repo"),
                     Str(p, "host"),
                     Opt(p, "hostInstance"),
+                    Opt(p, "category") ?? "misc",
                     Str(p, "asset"),
                     steps));
             }

@@ -1,5 +1,4 @@
 using System.Windows;
-using Microsoft.Win32;
 using Onyx.Core.Install;
 using Onyx.Core.Platform;
 using Onyx.ViewModels;
@@ -17,8 +16,6 @@ public partial class App : Application
             Shutdown(RunElevatedJob(jobPath));
             return;
         }
-
-        ApplyTheme();
 
         var services = Services.Build();
         var model = new MainViewModel(services);
@@ -44,31 +41,6 @@ public partial class App : Application
         catch (Exception)
         {
             return 1;
-        }
-    }
-
-    void ApplyTheme()
-    {
-        var source = SystemUsesLightTheme() ? "Theme/Light.xaml" : "Theme/Dark.xaml";
-
-        Resources.MergedDictionaries[0] = new ResourceDictionary
-        {
-            Source = new Uri(source, UriKind.Relative)
-        };
-    }
-
-    static bool SystemUsesLightTheme()
-    {
-        try
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-
-            return key?.GetValue("AppsUseLightTheme") is not int value || value != 0;
-        }
-        catch (Exception)
-        {
-            return true;
         }
     }
 }

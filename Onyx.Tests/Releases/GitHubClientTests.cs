@@ -139,6 +139,20 @@ public class GitHubClientTests
     }
 
     [Fact]
+    public async Task A_server_error_falls_back_to_the_cache_too()
+    {
+        var cache = new MemoryCache();
+        cache.Put("RitoShark/TexThumbnailProvider", "\"abc123\"", Fixture("releases-texthumbnailprovider.json"));
+
+        var handler = StubHandler.Json("{}", HttpStatusCode.Forbidden);
+
+        var releases = await new GitHubClient(new HttpClient(handler), cache)
+            .ListReleasesAsync("RitoShark/TexThumbnailProvider", default);
+
+        Assert.Contains(releases, r => r.Tag == "v1.1.0");
+    }
+
+    [Fact]
     public async Task A_rate_limit_with_no_cache_still_throws()
     {
         var handler = new StubHandler(_ =>

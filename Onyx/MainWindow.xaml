@@ -5,8 +5,8 @@
         xmlns:local="clr-namespace:Onyx"
         Style="{StaticResource OnyxWindow}"
         Title="Onyx"
-        Width="720" Height="760"
-        MinWidth="620" MinHeight="480"
+        Width="740" Height="820"
+        MinWidth="640" MinHeight="500"
         WindowStartupLocation="CenterScreen">
 
     <Grid>
@@ -17,10 +17,21 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Height="40">
-            <TextBlock Text="Onyx"
-                       Style="{StaticResource CaptionText}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                <Path Data="M 8,1.5 L 14,5 V 11 L 8,14.5 L 2,11 V 5 Z"
+                      Stroke="{DynamicResource Accent}"
+                      StrokeThickness="1.5"
+                      StrokeLineJoin="Round"
+                      Width="15" Height="15"
+                      Stretch="Uniform"
+                      VerticalAlignment="Center" />
+                <TextBlock Text="Onyx"
+                           Style="{StaticResource CaptionText}"
+                           Foreground="{DynamicResource TextPrimary}"
+                           FontWeight="SemiBold"
+                           Margin="8,0,0,0"
+                           VerticalAlignment="Center" />
+            </StackPanel>
 
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
@@ -52,7 +63,7 @@
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1" Margin="28,8,28,20">
+        <Grid Grid.Row="1" Margin="24,6,24,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -80,12 +91,38 @@
 
         <Grid Grid.Row="2">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          Padding="28,0,20,24"
+                          Padding="24,0,16,20"
                           HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl ItemsSource="{Binding Groups}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <local:PluginRow Margin="0,0,0,10" />
+                            <StackPanel Margin="0,0,0,14">
+                                <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
+                                    <Path Data="{Binding Icon}"
+                                          Stroke="{DynamicResource Accent}"
+                                          StrokeThickness="1.3"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Width="14" Height="14"
+                                          Stretch="Uniform"
+                                          VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Title}"
+                                               Style="{StaticResource CaptionText}"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontWeight="SemiBold"
+                                               Margin="8,0,0,0"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <local:PluginRow Margin="0,0,0,8" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -94,7 +131,7 @@
             <Grid Visibility="{Binding Sheet.IsOpen, Converter={StaticResource BoolToVisibility}}">
                 <Rectangle Fill="{DynamicResource Scrim}" />
                 <Border Background="{DynamicResource SurfaceRaised}"
-                        BorderBrush="{DynamicResource Separator}"
+                        BorderBrush="{DynamicResource SeparatorStrong}"
                         BorderThickness="1"
                         CornerRadius="12"
                         Padding="24"
@@ -102,7 +139,7 @@
                         VerticalAlignment="Center"
                         HorizontalAlignment="Center">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="30" ShadowDepth="6" Direction="270" Opacity="0.28" Color="Black" />
+                        <DropShadowEffect BlurRadius="30" ShadowDepth="6" Direction="270" Opacity="0.4" Color="Black" />
                     </Border.Effect>
                     <StackPanel>
                         <TextBlock Text="{Binding Sheet.Title}" Style="{StaticResource HeadingText}" TextWrapping="Wrap" />

@@ -53,7 +53,7 @@
 
     <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Template" Value="{StaticResource OnyxButtonTemplate}" />
-        <Setter Property="Background" Value="{DynamicResource Accent}" />
+        <Setter Property="Background" Value="{DynamicResource AccentGradient}" />
         <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Tag" Value="6" />
@@ -87,7 +87,7 @@
     </Style>
 
     <Style x:Key="DangerLinkButton" TargetType="Button" BasedOn="{StaticResource LinkButton}">
-        <Setter Property="Foreground" Value="#FFD7402B" />
+        <Setter Property="Foreground" Value="{DynamicResource Danger}" />
     </Style>
 
     <Style x:Key="ChromeButton" TargetType="Button">

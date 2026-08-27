@@ -8,7 +8,7 @@
             CornerRadius="10"
             SnapsToDevicePixels="True">
         <StackPanel>
-            <Grid Margin="16,14">
+            <Grid Margin="14,12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="36" />
                     <ColumnDefinition Width="*" />
@@ -16,9 +16,12 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Width="30" Height="30" CornerRadius="7" Background="{DynamicResource Control}" />
+                    <Border Width="30" Height="30" CornerRadius="7"
+                            Background="{DynamicResource SurfaceSunken}"
+                            BorderBrush="{DynamicResource Separator}"
+                            BorderThickness="1" />
                     <Path Data="{Binding IconGeometry}"
-                          Stroke="{DynamicResource TextSecondary}"
+                          Stroke="{DynamicResource Accent}"
                           StrokeThickness="1.4"
                           StrokeStartLineCap="Round"
                           StrokeEndLineCap="Round"
@@ -33,7 +36,7 @@
                 <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingText}" />
-                        <Border Background="{DynamicResource Accent}"
+                        <Border Background="{DynamicResource AccentGradient}"
                                 CornerRadius="7"
                                 Height="16"
                                 Padding="7,0"
@@ -57,7 +60,7 @@
 
                     <TextBlock Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis">
                         <Run Text="{Binding HostLabel, Mode=OneWay}" FontWeight="SemiBold" />
-                        <Run Text="{Binding HostPath, Mode=OneWay}" />
+                        <Run Text="{Binding HostPath, Mode=OneWay}" Foreground="{DynamicResource TextMuted}" />
                     </TextBlock>
                 </StackPanel>
 
@@ -107,7 +110,7 @@
                                     <BeginStoryboard>
                                         <Storyboard>
                                             <DoubleAnimation Storyboard.TargetProperty="MaxHeight"
-                                                             To="320" Duration="0:0:0.22">
+                                                             To="420" Duration="0:0:0.22">
                                                 <DoubleAnimation.EasingFunction>
                                                     <CubicEase EasingMode="EaseOut" />
                                                 </DoubleAnimation.EasingFunction>
@@ -135,8 +138,9 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <Grid Margin="16,14">
+                <Grid Margin="14,12">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -171,14 +175,76 @@
                         </ComboBox>
                     </Grid>
 
-                    <Border Grid.Row="1"
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding Targets}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource SurfaceRaised}"
+                                        BorderBrush="{DynamicResource Separator}"
+                                        BorderThickness="1"
+                                        CornerRadius="7"
+                                        Padding="10,7"
+                                        Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Label}"
+                                                   Style="{StaticResource CaptionText}"
+                                                   Foreground="{DynamicResource TextPrimary}"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Path}"
+                                                   Style="{StaticResource CaptionText}"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="10,0"
+                                                   VerticalAlignment="Center" />
+
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Background="{DynamicResource SurfaceSunken}"
+                                                    BorderBrush="{DynamicResource Separator}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="8,2"
+                                                    Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding Status}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondary}" />
+                                            </Border>
+                                            <Button Style="{StaticResource ChromeButton}"
+                                                    Width="24" Height="22"
+                                                    Command="{Binding OpenCommand}"
+                                                    ToolTip="Open folder">
+                                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Path Data="M 1,3 H 5 L 6.5,4.5 H 12 V 10.5 H 1 Z"
+                                                          Stroke="{DynamicResource TextSecondary}"
+                                                          StrokeThickness="1.2"
+                                                          StrokeLineJoin="Round"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center" />
+                                                </Grid>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Grid.Row="2"
                             Background="{DynamicResource Surface}"
                             BorderBrush="{DynamicResource Separator}"
                             BorderThickness="1"
                             CornerRadius="7"
                             Padding="12,10"
-                            Margin="0,12,0,0"
-                            MaxHeight="150">
+                            Margin="0,4,0,0"
+                            MaxHeight="130">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <TextBlock Text="{Binding ReleaseNotes}"
                                        Style="{StaticResource CaptionText}"
@@ -186,13 +252,11 @@
                         </ScrollViewer>
                     </Border>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
-                        <Button Style="{StaticResource LinkButton}"
-                                Content="Reveal in Explorer"
-                                Command="{Binding RevealCommand}" />
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Style="{StaticResource LinkButton}"
                                 Content="Choose folder…"
-                                Command="{Binding ChooseFolderCommand}" />
+                                Command="{Binding ChooseFolderCommand}"
+                                Visibility="{Binding ShowsChooseFolder, Converter={StaticResource BoolToVisibility}}" />
                         <Button Style="{StaticResource DangerLinkButton}"
                                 Content="Uninstall"
                                 Command="{Binding UninstallCommand}" />

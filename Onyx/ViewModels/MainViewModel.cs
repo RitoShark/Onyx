@@ -6,9 +6,24 @@ using Onyx.Core.Processes;
 
 namespace Onyx.ViewModels;
 
+public sealed class SectionViewModel(string title, string icon, IReadOnlyList<PluginRowViewModel> rows)
+{
+    public string Title { get; } = title;
+    public string Icon { get; } = icon;
+    public IReadOnlyList<PluginRowViewModel> Rows { get; } = rows;
+}
+
 public sealed class MainViewModel : ObservableObject
 {
     static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(30);
+
+    static readonly (string Key, string Title, string Icon)[] Sections =
+    [
+        ("textures", "Texture Plugins", "M 2,3 H 14 V 13 H 2 Z M 2,10 L 6,6 L 9,9 L 11,7.5 L 14,10 M 11,5.5 A 0.9,0.9 0 1 0 11,5.49"),
+        ("dcc", "3D Software", "M 8,1.5 L 14,5 V 11 L 8,14.5 L 2,11 V 5 Z M 2,5 L 8,8.5 L 14,5 M 8,8.5 V 14.5"),
+        ("system", "Windows", "M 2,4 L 7.4,3.2 V 7.6 L 2,7.6 Z M 8.6,3 L 14,2.2 V 7.6 L 8.6,7.6 Z M 2,8.6 L 7.4,8.6 V 13 L 2,12.2 Z M 8.6,8.6 L 14,8.6 V 14 L 8.6,13.2 Z"),
+        ("misc", "Misc", "M 2,4.5 H 14 M 2,8 H 14 M 2,11.5 H 9")
+    ];
 
     readonly DispatcherTimer _refreshTimer;
     string _statusMessage = "";
@@ -27,7 +42,7 @@ public sealed class MainViewModel : ObservableObject
 
     public Services Services { get; }
     public SheetViewModel Sheet { get; } = new();
-    public ObservableCollection<PluginRowViewModel> Rows { get; } = [];
+    public ObservableCollection<SectionViewModel> Groups { get; } = [];
     public RelayCommand RefreshCommand { get; }
 
     public string StatusMessage
@@ -74,9 +89,26 @@ public sealed class MainViewModel : ObservableObject
 
             var statuses = await Services.Manager.StatusAsync(CancellationToken.None);
 
-            Rows.Clear();
-            foreach (var status in statuses)
-                Rows.Add(new PluginRowViewModel(this, status));
+            Groups.Clear();
+            foreach (var (key, title, icon) in Sections)
+            {
+                var rows = statuses
+                    .Where(s => s.Plugin.Category == key)
+                    .Select(s => new PluginRowViewModel(this, s))
+                    .ToList();
+
+                if (rows.Count > 0)
+                    Groups.Add(new SectionViewModel(title, icon, rows));
+            }
+
+            var known = Sections.Select(s => s.Key).ToHashSet();
+            var stray = statuses
+                .Where(s => !known.Contains(s.Plugin.Category))
+                .Select(s => new PluginRowViewModel(this, s))
+                .ToList();
+
+            if (stray.Count > 0)
+                Groups.Add(new SectionViewModel("Other", Sections[^1].Icon, stray));
 
             var problem = statuses.Select(s => s.Problem).FirstOrDefault(p => p is not null);
             if (problem is not null) StatusMessage = problem;

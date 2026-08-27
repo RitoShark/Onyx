@@ -18,6 +18,19 @@ public sealed class GitHubClient(HttpClient http, IReleaseCache? cache = null)
     {
         var cached = cache?.Get(repo);
 
+        try
+        {
+            return await FetchAsync(repo, cached, ct);
+        }
+        catch (Exception e) when (cached is not null &&
+                                  e is RateLimitedException or HttpRequestException or TaskCanceledException)
+        {
+            return Parse(cached.Value.Json);
+        }
+    }
+
+    async Task<IReadOnlyList<Release>> FetchAsync(string repo, (string ETag, string Json)? cached, CancellationToken ct)
+    {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             $"https://api.github.com/repos/{repo}/releases?per_page=100");
@@ -36,10 +49,7 @@ public sealed class GitHubClient(HttpClient http, IReleaseCache? cache = null)
         if (response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests &&
             response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) &&
             remaining.FirstOrDefault() == "0")
-        {
-            if (cached is not null) return Parse(cached.Value.Json);
             throw new RateLimitedException();
-        }
 
         response.EnsureSuccessStatusCode();
 

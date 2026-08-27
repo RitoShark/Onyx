@@ -133,3 +133,14 @@ public sealed class ThumbnailHostDetector(IKnownFolders folders) : IHostDetector
             Path.Combine(folders.LocalAppData, "RitoShark", "TexThumbnailProvider"))
     ];
 }
+
+public sealed class HematiteHostDetector(IKnownFolders folders) : IHostDetector
+{
+    public string HostId => "hematite";
+
+    public IReadOnlyList<HostInstance> Detect() =>
+    [
+        new(HostId, "default", "Command-line tool",
+            Path.Combine(folders.LocalAppData, "RitoShark", "Hematite"))
+    ];
+}

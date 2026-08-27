@@ -12,7 +12,7 @@ public class PlanResolverTests
             assets.Select(a => new ReleaseAsset(a, $"https://x/{a}", 1)).ToList());
 
     static PluginEntry Plugin(string asset, params InstallStep[] steps) =>
-        new("p", "P", "s", "Owner/Repo", "blender", null, asset, steps);
+        new("p", "P", "s", "Owner/Repo", "blender", null, "dcc", asset, steps);
 
     [Fact]
     public void Substitutes_the_host_path_into_targets()

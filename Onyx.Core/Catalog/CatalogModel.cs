@@ -11,6 +11,7 @@ public sealed record PluginEntry(
     string Repo,
     string Host,
     string? HostInstance,
+    string Category,
     string Asset,
     IReadOnlyList<InstallStep> Steps);
 

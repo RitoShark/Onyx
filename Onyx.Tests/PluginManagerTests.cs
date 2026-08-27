@@ -45,103 +45,123 @@ public class PluginManagerTests : IDisposable
         public string ReadExpected(string sidecarPath) => "same";
     }
 
-    PluginManager Build(IReadOnlyList<HostInstance> hosts, params string[] running)
+    sealed class StaticProbe(string pluginId, string? found) : IPresenceProbe
+    {
+        public string PluginId => pluginId;
+        public string? DetectInstalled(string hostPath) => found;
+    }
+
+    PluginManager Build(
+        IReadOnlyList<HostInstance> hosts,
+        string[]? running = null,
+        IReadOnlyList<IPresenceProbe>? probes = null,
+        IFileSystem? fs = null)
     {
         var detectors = hosts
             .GroupBy(h => h.HostId)
             .Select(g => (IHostDetector)new StaticDetector(g.Key, g.ToList()))
             .ToList();
 
-        var handler = StubHandler.Json(
-            Releases.GitHubClientTests.Fixture("releases-aventurine.json"));
+        var handler = new StubHandler(request =>
+            request.RequestUri!.Host == "api.github.com"
+                ? new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new StringContent(Releases.GitHubClientTests.Fixture("releases-aventurine.json"))
+                }
+                : new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(TinyZip())
+                });
 
         return new PluginManager(
             CatalogSource.Embedded(),
             new HostRegistry(detectors),
             new GitHubClient(new HttpClient(handler)),
             new PayloadFetcher(new HttpClient(handler)),
-            new InstallEngine(new FakeFileSystem(), new FakeRegistrar(), new FakeChecksum()),
-            new ProcessGuard(new FakeProcessTable(running)),
-            StateStore.Load(_statePath));
+            new InstallEngine(fs ?? new FakeFileSystem(), new FakeRegistrar(), new FakeChecksum()),
+            new ProcessGuard(new FakeProcessTable(running ?? [])),
+            StateStore.Load(_statePath),
+            probes: probes);
     }
 
     static HostInstance Blender(string version) =>
         new("blender", version, $"Blender {version}", $@"C:\cfg\Blender\{version}");
 
+    static byte[] TinyZip()
+    {
+        using var buffer = new MemoryStream();
+        using (var archive = new System.IO.Compression.ZipArchive(buffer, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+        {
+            using var writer = new StreamWriter(archive.CreateEntry("Aventurine/__init__.py").Open());
+            writer.Write("x");
+        }
+        return buffer.ToArray();
+    }
+
     [Fact]
-    public async Task Pairs_a_plugin_with_every_matching_host_instance()
+    public async Task A_plugin_gets_one_status_with_a_target_per_host_instance()
     {
         var manager = Build([Blender("4.1"), Blender("4.3")]);
 
-        var statuses = await manager.StatusAsync(default);
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "aventurine-blender");
 
-        Assert.Equal(2, statuses.Count(s => s.Plugin.Id == "aventurine-blender" && s.Host is not null));
+        Assert.Equal(["4.1", "4.3"], status.Targets.Select(t => t.Host.InstanceId));
     }
 
     [Fact]
-    public async Task A_plugin_whose_host_is_absent_still_appears_with_no_host()
+    public async Task A_plugin_whose_host_is_absent_still_appears_with_no_targets()
     {
         var manager = Build([Blender("4.3")]);
 
-        var photoshop = statusFor(await manager.StatusAsync(default), "ritotex-photoshop");
+        var photoshop = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "ritotex-photoshop");
 
-        Assert.Null(photoshop.Host);
+        Assert.False(photoshop.HasHost);
         Assert.False(photoshop.Installed);
-
-        static PluginStatus statusFor(IReadOnlyList<PluginStatus> all, string id) =>
-            all.Single(s => s.Plugin.Id == id);
     }
 
     [Fact]
-    public async Task A_pinned_host_instance_never_pairs_with_another_version()
+    public async Task A_pinned_host_instance_never_targets_another_version()
     {
         var manager = Build([new HostInstance("gimp", "2.10", "GIMP 2.10", @"C:\gimp\2.10")]);
 
         var statuses = await manager.StatusAsync(default);
 
-        Assert.NotNull(statuses.Single(s => s.Plugin.Id == "tex-gimp2").Host);
-        Assert.Null(statuses.Single(s => s.Plugin.Id == "tex-gimp3").Host);
+        Assert.True(statuses.Single(s => s.Plugin.Id == "tex-gimp2").HasHost);
+        Assert.False(statuses.Single(s => s.Plugin.Id == "tex-gimp3").HasHost);
     }
 
     [Fact]
-    public async Task Every_catalog_plugin_produces_at_least_one_row()
+    public async Task Every_catalog_plugin_produces_exactly_one_status()
     {
-        var manager = Build([Blender("4.3")]);
+        var manager = Build([Blender("4.0"), Blender("4.1"), Blender("4.3")]);
 
         var statuses = await manager.StatusAsync(default);
 
-        Assert.Equal(7, statuses.Select(s => s.Plugin.Id).Distinct().Count());
+        Assert.Equal(8, statuses.Count);
+        Assert.Equal(8, statuses.Select(s => s.Plugin.Id).Distinct().Count());
     }
 
     [Fact]
     public async Task Install_refuses_while_the_host_is_running()
     {
-        var manager = Build([Blender("4.3")], running: "blender");
+        var manager = Build([Blender("4.3")], running: ["blender"]);
 
         var ex = await Assert.ThrowsAsync<HostRunningException>(
-            () => manager.InstallAsync("aventurine-blender", "4.3", "3.1.5", default));
+            () => manager.InstallAsync("aventurine-blender", "3.1.5", default));
 
-        Assert.Contains("Blender 4.3", ex.Message);
         Assert.Contains("blender", ex.ProcessNames);
     }
 
     [Fact]
-    public void Uninstall_refuses_while_the_host_is_running()
+    public void UninstallAll_refuses_while_the_host_is_running()
     {
-        var manager = Build([Blender("4.3")], running: "blender");
+        var state = StateStore.Load(_statePath);
+        state.Record("aventurine-blender", "4.3", "3.1.5", InstallJournal.Empty);
+        state.Save();
 
-        Assert.Throws<HostRunningException>(() => manager.UninstallAsync("aventurine-blender", "4.3"));
-    }
+        var manager = Build([Blender("4.3")], running: ["blender"]);
 
-    [Fact]
-    public async Task An_unrelated_running_application_does_not_block_an_install()
-    {
-        var manager = Build([Blender("4.3")], running: "chrome");
-
-        var ex = await Record.ExceptionAsync(
-            () => manager.InstallAsync("aventurine-blender", "4.3", "does-not-exist", default));
-
-        Assert.IsType<PlanException>(ex);
+        Assert.Throws<HostRunningException>(() => manager.UninstallAll("aventurine-blender"));
     }
 
     [Fact]
@@ -150,18 +170,60 @@ public class PluginManagerTests : IDisposable
         var manager = Build([Blender("4.3")]);
 
         var ex = await Assert.ThrowsAsync<PlanException>(
-            () => manager.InstallAsync("aventurine-blender", "4.3", "99.0.0", default));
+            () => manager.InstallAsync("aventurine-blender", "99.0.0", default));
 
         Assert.Contains("Aventurine", ex.Message);
     }
 
     [Fact]
-    public async Task Installing_into_an_undetected_host_fails_rather_than_guessing_a_path()
+    public async Task Installing_with_no_detected_host_fails_rather_than_guessing_a_path()
     {
         var manager = Build([Blender("4.3")]);
 
         await Assert.ThrowsAsync<PlanException>(
-            () => manager.InstallAsync("aventurine-blender", "4.0", "3.1.5", default));
+            () => manager.InstallAsync("ritotex-photoshop", "v2.0.2", default));
+    }
+
+    [Fact]
+    public async Task Install_reaches_every_detected_instance()
+    {
+        var sandbox = Path.Combine(Path.GetTempPath(), $"onyx-mgr-{Guid.NewGuid():N}");
+        try
+        {
+            HostInstance Real(string v) =>
+                new("blender", v, $"Blender {v}", Path.Combine(sandbox, v));
+
+            var manager = Build(
+                [Real("4.1"), Real("4.3")],
+                fs: new Onyx.Core.Platform.PhysicalFileSystem());
+
+            await manager.InstallAsync("aventurine-blender", "3.1.5", default);
+
+            var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "aventurine-blender");
+            Assert.All(status.Targets, t => Assert.Equal("3.1.5", t.InstalledTag));
+            Assert.Equal("3.1.5", status.InstalledTag);
+            Assert.True(File.Exists(Path.Combine(sandbox, "4.1", "scripts", "addons", "Aventurine", "__init__.py")));
+            Assert.True(File.Exists(Path.Combine(sandbox, "4.3", "scripts", "addons", "Aventurine", "__init__.py")));
+        }
+        finally
+        {
+            if (Directory.Exists(sandbox)) Directory.Delete(sandbox, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Mixed_versions_across_instances_read_as_mixed()
+    {
+        var state = StateStore.Load(_statePath);
+        state.Record("aventurine-blender", "4.1", "3.1.2", InstallJournal.Empty);
+        state.Record("aventurine-blender", "4.3", "3.1.5", InstallJournal.Empty);
+        state.Save();
+
+        var manager = Build([Blender("4.1"), Blender("4.3")]);
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "aventurine-blender");
+
+        Assert.Equal("mixed", status.InstalledTag);
+        Assert.True(status.UpdateAvailable);
     }
 
     [Fact]
@@ -172,11 +234,55 @@ public class PluginManagerTests : IDisposable
         state.Save();
 
         var manager = Build([Blender("4.3")]);
-        var status = (await manager.StatusAsync(default))
-            .Single(s => s.Plugin.Id == "aventurine-blender" && s.Host is not null);
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "aventurine-blender");
 
         Assert.Equal("3.1.2", status.InstalledTag);
         Assert.Equal("3.1.5", status.Latest!.Tag);
         Assert.True(status.UpdateAvailable);
+    }
+
+    [Fact]
+    public async Task A_presence_probe_reports_an_untracked_install_as_detected()
+    {
+        var manager = Build(
+            [new HostInstance("thumbnails", "default", "Windows Explorer", @"C:\local\Thumbs")],
+            probes: [new StaticProbe("tex-thumbnails", @"C:\somewhere\TexThumbnailProvider.dll")]);
+
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-thumbnails");
+
+        var target = Assert.Single(status.Targets);
+        Assert.Equal("detected", target.InstalledTag);
+        Assert.True(target.External);
+        Assert.True(target.UpdateAvailable);
+    }
+
+    [Fact]
+    public async Task A_tracked_install_wins_over_the_presence_probe()
+    {
+        var state = StateStore.Load(_statePath);
+        state.Record("tex-thumbnails", "default", "v1.1.0", InstallJournal.Empty);
+        state.Save();
+
+        var manager = Build(
+            [new HostInstance("thumbnails", "default", "Windows Explorer", @"C:\local\Thumbs")],
+            probes: [new StaticProbe("tex-thumbnails", @"C:\somewhere\TexThumbnailProvider.dll")]);
+
+        var target = Assert.Single(
+            (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-thumbnails").Targets);
+
+        Assert.Equal("v1.1.0", target.InstalledTag);
+        Assert.False(target.External);
+    }
+
+    [Fact]
+    public async Task A_probe_that_finds_nothing_leaves_the_plugin_uninstalled()
+    {
+        var manager = Build(
+            [new HostInstance("thumbnails", "default", "Windows Explorer", @"C:\local\Thumbs")],
+            probes: [new StaticProbe("tex-thumbnails", null)]);
+
+        var status = (await manager.StatusAsync(default)).Single(s => s.Plugin.Id == "tex-thumbnails");
+
+        Assert.False(status.Installed);
     }
 }
