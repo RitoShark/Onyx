@@ -262,3 +262,25 @@ git-cliff can build a changelog as it does for Flint and Quartz.
 Distribution: a self-contained single-file `Onyx.exe` attached to a GitHub
 release. An installer is not part of the first version — the app that installs
 things should not itself need an installer.
+
+## Amendments — 2026-08-27, same day
+
+Owner direction after the first working build changed four things:
+
+- **The UI is dark-only and styled to match Quartz**, not macOS System Settings.
+  Tokens come from Quartz-Rust's `theme.css`: `#0d0d0f`/`#141417`/`#1b1b1f`
+  surfaces, `#2a2a30` borders, `#3fa6f4` accent with a 135° gradient on primary
+  buttons, and the plugin list grouped into labeled sections with accent icons.
+  The light theme and the system-theme lookup are gone.
+- **One row per plugin, never per host version.** Multiple detected instances
+  (Blender 4.0/4.1/4.3, several Photoshop years) are targets listed inside the
+  row's expansion; Install, Update and Uninstall apply to every target at once.
+  Mixed per-instance versions display as "mixed".
+- **Catalog entries carry a `category`** (`textures`, `dcc`, `system`, `misc`)
+  that drives the section grouping, and **Hematite joined the catalog as misc**:
+  the loose `hematite-cli.exe` release asset copied into
+  `%LOCALAPPDATA%\RitoShark\Hematite\`.
+- **Presence probes detect installs Onyx didn't make.** The thumbnail provider is
+  recognised from its HKCU CLSID registration plus the DLL on disk, Hematite from
+  its exe. Such finds show as "detected" with an Update action that takes over
+  tracking; an Onyx state record always wins over a probe.
