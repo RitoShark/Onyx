@@ -120,9 +120,17 @@
                                   Style="{StaticResource OnyxComboBox}"
                                   ItemsSource="{Binding Versions}"
                                   SelectedItem="{Binding SelectedVersion}"
-                                  DisplayMemberPath="Display"
                                   HorizontalAlignment="Left"
-                                  MinWidth="300" />
+                                  MinWidth="300">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Display}"
+                                               FontFamily="{StaticResource TextFont}"
+                                               FontSize="13"
+                                               VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </Grid>
 
                     <Border Grid.Row="1"
