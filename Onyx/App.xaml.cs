@@ -35,7 +35,13 @@ public partial class App : Application
             var engine = new InstallEngine(
                 new PhysicalFileSystem(), new Regsvr32Registrar(), new FileChecksum());
 
-            job.WriteJournal(engine.Apply(job.Plan, job.Payload()));
+            if (job.Revert is not null)
+            {
+                engine.Revert(job.Revert);
+                return 0;
+            }
+
+            job.WriteJournal(engine.Apply(job.Plan!, job.Payload()));
             return 0;
         }
         catch (Exception)

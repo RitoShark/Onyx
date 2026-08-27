@@ -13,6 +13,7 @@ public sealed class HostRegistry(IReadOnlyList<IHostDetector> detectors, HostOve
             new MayaDetector(registry, fs, folders),
             new BlenderDetector(fs, folders),
             new ThumbnailHostDetector(folders),
+            new LtkThumbnailHostDetector(folders),
             new HematiteHostDetector(folders)
         ], overrides);
 

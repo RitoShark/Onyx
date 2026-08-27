@@ -164,6 +164,23 @@ public sealed class ThumbnailHostDetector(IKnownFolders folders) : IHostDetector
     }
 }
 
+public sealed class LtkThumbnailHostDetector(IKnownFolders folders) : IHostDetector
+{
+    public string HostId => "ltkthumbs";
+
+    public IReadOnlyList<HostInstance> Detect()
+    {
+        var windir = folders.Variable("WINDIR");
+
+        return
+        [
+            new(HostId, "default", "Windows Explorer",
+                Path.Combine(folders.ProgramFiles, "LeagueToolkit", "ltk-tex-thumb-handler"),
+                windir is null ? null : Path.Combine(windir, "explorer.exe"))
+        ];
+    }
+}
+
 public sealed class HematiteHostDetector(IKnownFolders folders) : IHostDetector
 {
     public string HostId => "hematite";

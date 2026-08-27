@@ -132,7 +132,7 @@ public sealed class PluginManager(
 
         var plan = PlanResolver.Resolve(plugin, host, release);
 
-        Uninstall(plugin.Id, host.InstanceId);
+        await UninstallAsync(plugin.Id, host.InstanceId, ct);
 
         using var payload = await payloads.FetchAsync(plan, ct);
         var journal = await ApplyAsync(plan, payload, ct);
@@ -169,25 +169,47 @@ public sealed class PluginManager(
         catch (IOException) { }
     }
 
-    public void UninstallAll(string pluginId)
+    public async Task UninstallAll(string pluginId, CancellationToken ct)
     {
         var plugin = Find(pluginId);
         var instances = InstancesFor(plugin);
         if (instances.Count > 0) RequireClosed(plugin.Host, instances[0].Label);
 
         foreach (var host in instances)
-            Uninstall(pluginId, host.InstanceId);
+            await UninstallAsync(pluginId, host.InstanceId, ct);
 
         state.Save();
     }
 
-    void Uninstall(string pluginId, string instanceId)
+    async Task UninstallAsync(string pluginId, string instanceId, CancellationToken ct)
     {
         var record = state.Find(pluginId, instanceId);
         if (record is null) return;
 
-        engine.Revert(record.AsJournal());
+        await RevertAsync(record.AsJournal(), ct);
         state.Forget(pluginId, instanceId);
+    }
+
+    async Task RevertAsync(InstallJournal journal, CancellationToken ct)
+    {
+        if (elevator is null || !Elevation.NeedsElevation(journal, elevator.CanWrite))
+        {
+            engine.Revert(journal);
+            return;
+        }
+
+        var staging = Path.Combine(Path.GetTempPath(), "onyx-jobs");
+        var journalPath = Path.Combine(staging, $"journal-{Guid.NewGuid():N}.json");
+        var jobPath = ElevatedJob.Write(new ElevatedJob(null, null, journalPath, journal), staging);
+
+        try
+        {
+            await elevator.RunAsync(jobPath, ct);
+        }
+        finally
+        {
+            TryDelete(jobPath);
+        }
     }
 
     void RequireClosed(string hostId, string hostLabel)

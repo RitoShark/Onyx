@@ -10,6 +10,10 @@ public static class Elevation
             .OfType<string>()
             .Any(target => IsProtected(target) && !canWrite(target));
 
+    public static bool NeedsElevation(InstallJournal journal, Func<string, bool> canWrite) =>
+        journal.Written.Concat(journal.Registered)
+            .Any(target => IsProtected(target) && !canWrite(target));
+
     public static bool IsProtected(string path)
     {
         foreach (var folder in new[] { Environment.SpecialFolder.ProgramFiles, Environment.SpecialFolder.ProgramFilesX86 })

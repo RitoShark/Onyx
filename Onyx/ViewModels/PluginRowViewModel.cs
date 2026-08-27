@@ -97,7 +97,7 @@ public sealed class PluginRowViewModel : ObservableObject
         "gimp" => "m11 10 3 3 M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031",
         "maya" => "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z m3.3 7 8.7 5 8.7-5 M12 22V12",
         "blender" => "M20.341 6.484A10 10 0 0 1 10.266 21.85 M3.659 17.516A10 10 0 0 1 13.74 2.152 M 9.0,12.0 a 3.0,3.0 0 1 0 6.0,0 a 3.0,3.0 0 1 0 -6.0,0 M 17.0,5.0 a 2.0,2.0 0 1 0 4.0,0 a 2.0,2.0 0 1 0 -4.0,0 M 3.0,19.0 a 2.0,2.0 0 1 0 4.0,0 a 2.0,2.0 0 1 0 -4.0,0",
-        "thumbnails" => "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16 M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2 M 12.0,7.0 a 1.0,1.0 0 1 0 2.0,0 a 1.0,1.0 0 1 0 -2.0,0 M 10.0,2.0 h 10.0 a 2.0,2.0 0 0 1 2.0,2.0 v 10.0 a 2.0,2.0 0 0 1 -2.0,2.0 h -10.0 a 2.0,2.0 0 0 1 -2.0,-2.0 v -10.0 a 2.0,2.0 0 0 1 2.0,-2.0 z",
+        "thumbnails" or "ltkthumbs" => "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16 M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2 M 12.0,7.0 a 1.0,1.0 0 1 0 2.0,0 a 1.0,1.0 0 1 0 -2.0,0 M 10.0,2.0 h 10.0 a 2.0,2.0 0 0 1 2.0,2.0 v 10.0 a 2.0,2.0 0 0 1 -2.0,2.0 h -10.0 a 2.0,2.0 0 0 1 -2.0,-2.0 v -10.0 a 2.0,2.0 0 0 1 2.0,-2.0 z",
         "hematite" => "M12 19h8 m4 17 6-6-6-6",
         _ => "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M 3.29,7 L 12,12 L 20.71,7 m7.5 4.27 9 5.15"
     };
@@ -182,11 +182,7 @@ public sealed class PluginRowViewModel : ObservableObject
             await _owner.RunGuardedAsync(
                 _status.Plugin.Host,
                 HostDisplay,
-                () =>
-                {
-                    _owner.Services.Manager.UninstallAll(_status.Plugin.Id);
-                    return Task.CompletedTask;
-                });
+                () => _owner.Services.Manager.UninstallAll(_status.Plugin.Id, CancellationToken.None));
         }
         finally
         {
@@ -218,6 +214,7 @@ public sealed class PluginRowViewModel : ObservableObject
         "maya" => "Maya",
         "blender" => "Blender",
         "thumbnails" => "Windows Explorer",
+        "ltkthumbs" => "Windows Explorer",
         "hematite" => "Hematite",
         _ => hostId
     };

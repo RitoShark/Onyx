@@ -186,7 +186,7 @@ public sealed class MainViewModel : ObservableObject
 
     void ShowLockedFileSheet(string hostId, string hostLabel, FileLockedException locked, Func<Task> action)
     {
-        var explorer = hostId == "thumbnails";
+        var explorer = hostId is "thumbnails" or "ltkthumbs";
 
         Sheet.Show(
             explorer ? "Windows Explorer is holding the old handler open" : "A file is in use",

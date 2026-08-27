@@ -62,8 +62,52 @@ public class ElevationTests
 
             Assert.Equal(@"C:\payload", read.PayloadRoot);
             Assert.Equal(@"C:\payload", read.Payload().Root);
-            Assert.Equal("p", read.Plan.PluginId);
+            Assert.Equal("p", read.Plan!.PluginId);
             Assert.Equal(@"C:\target\a.dll", Assert.Single(read.Plan.Operations).To);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Reverting_a_program_files_journal_needs_elevation()
+    {
+        var journal = new InstallJournal(
+            [Path.Combine(ProgramFiles, "LeagueToolkit", "ltk-tex-thumb-handler", "ltk-tex-thumb-handler.dll")],
+            [Path.Combine(ProgramFiles, "LeagueToolkit", "ltk-tex-thumb-handler", "ltk-tex-thumb-handler.dll")]);
+
+        Assert.True(Elevation.NeedsElevation(journal, _ => false));
+    }
+
+    [Fact]
+    public void Reverting_a_per_user_journal_does_not_elevate()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var journal = new InstallJournal(
+            [Path.Combine(appData, "RitoShark", "TexThumbnailProvider", "TexThumbnailProvider.dll")],
+            [Path.Combine(appData, "RitoShark", "TexThumbnailProvider", "TexThumbnailProvider.dll")]);
+
+        Assert.False(Elevation.NeedsElevation(journal, _ => false));
+    }
+
+    [Fact]
+    public void A_revert_job_round_trips_through_a_file()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"onyx-jobs-{Guid.NewGuid():N}");
+        var journal = new InstallJournal([@"C:\t\a.dll"], [@"C:\t\a.dll"]);
+        var job = new ElevatedJob(null, null, Path.Combine(directory, "journal.json"), journal);
+
+        var path = ElevatedJob.Write(job, directory);
+        try
+        {
+            var read = ElevatedJob.Read(path);
+
+            Assert.Null(read.Plan);
+            Assert.Equal([@"C:\t\a.dll"], read.Revert!.Written);
+            Assert.Equal([@"C:\t\a.dll"], read.Revert.Registered);
+            Assert.Throws<PlanException>(() => read.Payload());
         }
         finally
         {

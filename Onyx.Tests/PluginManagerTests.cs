@@ -155,8 +155,8 @@ public class PluginManagerTests : IDisposable
 
         var statuses = await manager.StatusAsync(default);
 
-        Assert.Equal(7, statuses.Count);
-        Assert.Equal(7, statuses.Select(s => s.Plugin.Id).Distinct().Count());
+        Assert.Equal(8, statuses.Count);
+        Assert.Equal(8, statuses.Select(s => s.Plugin.Id).Distinct().Count());
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public class PluginManagerTests : IDisposable
     }
 
     [Fact]
-    public void UninstallAll_refuses_while_the_host_is_running()
+    public async Task UninstallAll_refuses_while_the_host_is_running()
     {
         var state = StateStore.Load(_statePath);
         state.Record("aventurine-blender", "4.3", "3.1.5", InstallJournal.Empty);
@@ -179,7 +179,7 @@ public class PluginManagerTests : IDisposable
 
         var manager = Build([Blender("4.3")], running: ["blender"]);
 
-        Assert.Throws<HostRunningException>(() => manager.UninstallAll("aventurine-blender"));
+        await Assert.ThrowsAsync<HostRunningException>(() => manager.UninstallAll("aventurine-blender", default));
     }
 
     [Fact]

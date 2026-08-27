@@ -2,14 +2,15 @@ using System.Text.Json;
 
 namespace Onyx.Core.Install;
 
-public sealed record ElevatedJob(InstallPlan Plan, string PayloadRoot, string JournalPath)
+public sealed record ElevatedJob(InstallPlan? Plan, string? PayloadRoot, string JournalPath, InstallJournal? Revert = null)
 {
     sealed class RootedPayload(string root) : IPayload
     {
         public string Root => root;
     }
 
-    public IPayload Payload() => new RootedPayload(PayloadRoot);
+    public IPayload Payload() =>
+        new RootedPayload(PayloadRoot ?? throw new PlanException("This job carries no payload."));
 
     public static string Write(ElevatedJob job, string directory)
     {

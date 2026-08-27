@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": 6,
+  "revision": 7,
   "plugins": [
     {
       "id": "ritotex-photoshop",
@@ -171,6 +171,30 @@
       "category": "system",
       "detect": [
         "TexThumbnailProvider.dll"
+      ]
+    },
+    {
+      "id": "ltk-tex-thumbnails",
+      "name": "LTK Thumbnails",
+      "summary": "Alternative .tex thumbnail handler, from LeagueToolkit.",
+      "description": "LeagueToolkit's thumbnail and preview handler for .tex files, as an alternative to Texture Thumbnails. Besides thumbnails it adds a preview pane with an alpha checkerboard, and TEX format and mip columns to Explorer.\n\nNot recommended over the RitoShark one: registration is machine-wide, so installing and uninstalling need administrator rights. Install one of the two, not both.",
+      "repo": "LeagueToolkit/ltk-tex-utils",
+      "host": "ltkthumbs",
+      "category": "system",
+      "asset": "ltk-tex-thumb-handler.dll",
+      "steps": [
+        {
+          "verb": "copy",
+          "from": "ltk-tex-thumb-handler.dll",
+          "to": "{host}/ltk-tex-thumb-handler.dll"
+        },
+        {
+          "verb": "regsvr32",
+          "to": "{host}/ltk-tex-thumb-handler.dll"
+        }
+      ],
+      "detect": [
+        "ltk-tex-thumb-handler.dll"
       ]
     },
     {

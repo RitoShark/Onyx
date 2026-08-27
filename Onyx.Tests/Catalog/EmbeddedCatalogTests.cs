@@ -10,7 +10,7 @@ public class EmbeddedCatalogTests
     [Fact]
     public void The_shipped_catalog_parses()
     {
-        Assert.Equal(7, Shipped.Plugins.Count);
+        Assert.Equal(8, Shipped.Plugins.Count);
     }
 
     [Theory]
@@ -20,6 +20,7 @@ public class EmbeddedCatalogTests
     [InlineData("ritoshark-maya", "maya", "dcc")]
     [InlineData("aventurine-blender", "blender", "dcc")]
     [InlineData("tex-thumbnails", "thumbnails", "system")]
+    [InlineData("ltk-tex-thumbnails", "ltkthumbs", "system")]
     [InlineData("hematite", "hematite", "misc")]
     public void Every_expected_plugin_is_present_on_its_host_and_category(string id, string host, string category)
     {
@@ -31,7 +32,7 @@ public class EmbeddedCatalogTests
     [Fact]
     public void Every_plugin_with_a_launchable_host_has_a_process_guard()
     {
-        foreach (var plugin in Shipped.Plugins.Where(p => p.Host is not ("thumbnails" or "hematite")))
+        foreach (var plugin in Shipped.Plugins.Where(p => p.Host is not ("thumbnails" or "ltkthumbs" or "hematite")))
             Assert.NotEmpty(ProcessGuard.ProcessNamesFor(plugin.Host));
     }
 
@@ -99,10 +100,24 @@ public class EmbeddedCatalogTests
     }
 
     [Fact]
-    public void Every_plugin_names_a_ritoshark_repository()
+    public void Every_plugin_names_a_ritoshark_repository_except_the_ltk_alternative()
     {
-        foreach (var plugin in Shipped.Plugins)
+        foreach (var plugin in Shipped.Plugins.Where(p => p.Id != "ltk-tex-thumbnails"))
             Assert.StartsWith("RitoShark/", plugin.Repo);
+
+        Assert.Equal("LeagueToolkit/ltk-tex-utils", Shipped.Plugins.Single(p => p.Id == "ltk-tex-thumbnails").Repo);
+    }
+
+    [Fact]
+    public void The_ltk_handler_copies_and_registers_a_single_dll()
+    {
+        var ltk = Shipped.Plugins.Single(p => p.Id == "ltk-tex-thumbnails");
+
+        Assert.Equal(2, ltk.Steps.Count);
+        Assert.Equal(StepVerb.Copy, ltk.Steps[0].Verb);
+        Assert.Equal(StepVerb.Regsvr32, ltk.Steps[1].Verb);
+        Assert.Equal("{host}/ltk-tex-thumb-handler.dll", ltk.Steps[1].To);
+        Assert.Contains("Not recommended", ltk.Description);
     }
 
     [Fact]
