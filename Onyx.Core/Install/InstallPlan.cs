@@ -10,6 +10,7 @@ public sealed record InstallPlan(
     string InstanceId,
     string Tag,
     ReleaseAsset Asset,
+    IReadOnlyList<ReleaseAsset> Sidecars,
     IReadOnlyList<PlannedOperation> Operations);
 
 public sealed class PlanException(string message) : Exception(message);

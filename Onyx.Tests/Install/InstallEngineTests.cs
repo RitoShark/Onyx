@@ -34,7 +34,7 @@ public class InstallEngineTests
     }
 
     static InstallPlan Plan(params PlannedOperation[] ops) =>
-        new("p", "i", "v1", new ReleaseAsset("a.zip", "https://x/a.zip", 1), ops);
+        new("p", "i", "v1", new ReleaseAsset("a.zip", "https://x/a.zip", 1), [], ops);
 
     static InstallEngine Engine(FakeFileSystem fs, FakeRegistrar? registrar = null, FakeChecksum? checksum = null) =>
         new(fs, registrar ?? new FakeRegistrar(), checksum ?? new FakeChecksum());

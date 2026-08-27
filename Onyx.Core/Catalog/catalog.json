@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "revision": 1,
+  "plugins": [
+    {
+      "id": "ritotex-photoshop",
+      "name": "RitoTex for Photoshop",
+      "summary": "Open and save .tex and .dds textures directly in Photoshop.",
+      "repo": "RitoShark/RitoTex-Photoshop",
+      "host": "photoshop",
+      "asset": "RitoTex.8bi",
+      "steps": [
+        { "verb": "copy", "from": "RitoTex.8bi", "to": "{host}/Plug-ins/RitoTex.8bi" }
+      ]
+    },
+    {
+      "id": "tex-paintnet",
+      "name": "Paint.NET .tex",
+      "summary": "Import and save League .tex files in Paint.NET.",
+      "repo": "RitoShark/Paint.NET-Tex-Plugin",
+      "host": "paintnet",
+      "asset": "TexFileType-*.zip",
+      "steps": [
+        { "verb": "copyDir", "from": ".", "to": "{host}/FileTypes" }
+      ]
+    },
+    {
+      "id": "tex-gimp2",
+      "name": "GIMP 2 .tex",
+      "summary": "Import and save League .tex files in GIMP 2.10.",
+      "repo": "RitoShark/Gimp-Tex-Plugin",
+      "host": "gimp",
+      "hostInstance": "2.10",
+      "asset": "GIMP2_TEX_Plugin_Windows.zip",
+      "steps": [
+        { "verb": "copyDir", "from": ".", "to": "{host}/plug-ins" }
+      ]
+    },
+    {
+      "id": "tex-gimp3",
+      "name": "GIMP 3 .tex",
+      "summary": "Import and save League .tex files in GIMP 3.",
+      "repo": "RitoShark/Gimp-Tex-Plugin",
+      "host": "gimp",
+      "hostInstance": "3.0",
+      "asset": "GIMP3_TEX_Plugin_Windows.zip",
+      "steps": [
+        { "verb": "copyDir", "from": ".", "to": "{host}/plug-ins/gimp3_tex_plugin" }
+      ]
+    },
+    {
+      "id": "ritoshark-maya",
+      "name": "RitoShark for Maya",
+      "summary": "Open League models, skeletons, animations and map geometry natively in Maya.",
+      "repo": "RitoShark/RitoShark-Maya",
+      "host": "maya",
+      "asset": "RitoShark-Maya-*.zip",
+      "steps": [
+        { "verb": "copyDir", "from": "plug-ins", "to": "{host}/plug-ins" },
+        { "verb": "copyDir", "from": "scripts", "to": "{host}/scripts" },
+        { "verb": "copyDir", "from": "prefs", "to": "{host}/prefs" },
+        { "verb": "copyDir", "from": "vendor/ritoshark", "to": "{host}/scripts/ritoshark" }
+      ]
+    },
+    {
+      "id": "aventurine-blender",
+      "name": "Aventurine for Blender",
+      "summary": "Native Blender addon for League models, animations and map geometry.",
+      "repo": "RitoShark/Aventurine-League-Tools",
+      "host": "blender",
+      "asset": "Aventurine-*.zip",
+      "steps": [
+        { "verb": "copyDir", "from": "Aventurine", "to": "{host}/scripts/addons/Aventurine" }
+      ]
+    },
+    {
+      "id": "tex-thumbnails",
+      "name": ".tex Explorer thumbnails",
+      "summary": "Show thumbnails for League .tex textures in Windows Explorer.",
+      "repo": "RitoShark/TexThumbnailProvider",
+      "host": "thumbnails",
+      "asset": "TexThumbnailProvider.dll",
+      "steps": [
+        { "verb": "sha256", "from": "TexThumbnailProvider.dll.sha256" },
+        { "verb": "copy", "from": "TexThumbnailProvider.dll", "to": "{host}/TexThumbnailProvider.dll" },
+        { "verb": "regsvr32", "to": "{host}/TexThumbnailProvider.dll" }
+      ]
+    }
+  ]
+}

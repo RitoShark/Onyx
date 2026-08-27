@@ -16,7 +16,13 @@ public static class PlanResolver
             .OrderBy(o => o.Verb == StepVerb.Sha256 ? 0 : 1)
             .ToList();
 
-        return new InstallPlan(plugin.Id, host.InstanceId, release.Tag, asset, operations);
+        var sidecars = operations
+            .Where(o => o.Verb == StepVerb.Sha256 && o.From is not null)
+            .Select(o => AssetGlob.Match(release.Assets, o.From!))
+            .OfType<ReleaseAsset>()
+            .ToList();
+
+        return new InstallPlan(plugin.Id, host.InstanceId, release.Tag, asset, sidecars, operations);
     }
 
     static string Target(HostInstance host, string template)
