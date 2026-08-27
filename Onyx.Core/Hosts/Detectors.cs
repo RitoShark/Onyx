@@ -132,11 +132,20 @@ public sealed class PaintNetDetector(IRegistry registry, IFileSystem fs, IKnownF
     {
         var found = new List<HostInstance>();
 
-        var target = registry.GetValue(Hive.LocalMachine, @"SOFTWARE\paint.net", "TARGETDIR")?.TrimEnd('\\');
-        if (target is not null && fs.DirectoryExists(Path.Combine(target, "FileTypes")))
+        var install = FirstInstallDir(
+        [
+            registry.GetValue(Hive.LocalMachine, @"SOFTWARE\paint.net", "TARGETDIR"),
+            registry.GetValue(Hive.LocalMachine, @"SOFTWARE\WOW6432Node\paint.net", "TARGETDIR"),
+            Path.Combine(folders.ProgramFiles, "paint.net"),
+            Path.Combine(folders.LocalAppData, "paint.net"),
+            Path.Combine(folders.AppData, "paint.net")
+        ]);
+
+        if (install is not null)
         {
-            var exe = Path.Combine(target, "paintdotnet.exe");
-            found.Add(new HostInstance(HostId, "classic", "Paint.NET", target, fs.FileExists(exe) ? exe : null));
+            found.Add(new HostInstance(HostId, "classic", "Paint.NET", install,
+                Path.Combine(install, "paintdotnet.exe")));
+            return found;
         }
 
         var store = Path.Combine(folders.Documents, "paint.net App Files");
@@ -145,6 +154,12 @@ public sealed class PaintNetDetector(IRegistry registry, IFileSystem fs, IKnownF
 
         return found;
     }
+
+    string? FirstInstallDir(IEnumerable<string?> candidates) =>
+        candidates
+            .OfType<string>()
+            .Select(dir => dir.TrimEnd('\\'))
+            .FirstOrDefault(dir => fs.FileExists(Path.Combine(dir, "paintdotnet.exe")));
 }
 
 public sealed class ThumbnailHostDetector(IKnownFolders folders) : IHostDetector

@@ -68,6 +68,13 @@
                     <Run Text="{Binding HostLabel, Mode=OneWay}" FontWeight="SemiBold" />
                     <Run Text="{Binding HostPath, Mode=OneWay}" Foreground="{DynamicResource TextMuted}" />
                 </TextBlock>
+
+                <TextBlock Text="{Binding BlockedNote}"
+                           Style="{StaticResource CaptionText}"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="0,4,0,0"
+                           Visibility="{Binding BlockedNote, Converter={StaticResource NotEmptyToVisibility}}" />
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">

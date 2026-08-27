@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": 7,
+  "revision": 8,
   "plugins": [
     {
       "id": "ritotex-photoshop",
@@ -169,6 +169,9 @@
         }
       ],
       "category": "system",
+      "conflicts": [
+        "ltk-tex-thumbnails"
+      ],
       "detect": [
         "TexThumbnailProvider.dll"
       ]
@@ -181,6 +184,9 @@
       "repo": "LeagueToolkit/ltk-tex-utils",
       "host": "ltkthumbs",
       "category": "system",
+      "conflicts": [
+        "tex-thumbnails"
+      ],
       "asset": "ltk-tex-thumb-handler.dll",
       "steps": [
         {

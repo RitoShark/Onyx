@@ -22,7 +22,8 @@ public sealed record PluginEntry(
     IReadOnlyList<InstallStep> Steps,
     IReadOnlyList<PluginVariant> Variants,
     IReadOnlyList<string> DetectPaths,
-    string Description = "")
+    string Description = "",
+    IReadOnlyList<string>? Conflicts = null)
 {
     public bool Supports(string instanceId) =>
         Variants.Count == 0 || Variants.Any(v => instanceId.StartsWith(v.InstancePrefix, StringComparison.Ordinal));

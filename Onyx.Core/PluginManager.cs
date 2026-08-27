@@ -18,7 +18,8 @@ public sealed record PluginStatus(
     IReadOnlyList<PluginTarget> Targets,
     Release? Latest,
     IReadOnlyList<Release> Releases,
-    string? Problem)
+    string? Problem,
+    string? BlockedBy = null)
 {
     public bool HasHost => Targets.Count > 0;
 
@@ -83,6 +84,15 @@ public sealed class PluginManager(
                 .ToList();
 
             statuses.Add(new PluginStatus(plugin, targets, latest, releases, problem));
+        }
+
+        for (var i = 0; i < statuses.Count; i++)
+        {
+            if (statuses[i].Plugin.Conflicts is not { Count: > 0 } conflicts) continue;
+
+            var blocker = statuses.FirstOrDefault(o => conflicts.Contains(o.Plugin.Id) && o.Installed);
+            if (blocker is not null)
+                statuses[i] = statuses[i] with { BlockedBy = blocker.Plugin.Name };
         }
 
         return statuses;

@@ -56,7 +56,8 @@ public static class CatalogReader
                     steps,
                     variants,
                     detect,
-                    Opt(p, "description") ?? ""));
+                    Opt(p, "description") ?? "",
+                    Strings(p, "conflicts")));
             }
 
             if (plugins.Count == 0)

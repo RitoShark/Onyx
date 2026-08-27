@@ -121,6 +121,13 @@ public class EmbeddedCatalogTests
     }
 
     [Fact]
+    public void The_two_thumbnail_providers_conflict_with_each_other()
+    {
+        Assert.Equal(["ltk-tex-thumbnails"], Shipped.Plugins.Single(p => p.Id == "tex-thumbnails").Conflicts);
+        Assert.Equal(["tex-thumbnails"], Shipped.Plugins.Single(p => p.Id == "ltk-tex-thumbnails").Conflicts);
+    }
+
+    [Fact]
     public void No_step_target_escapes_the_host_directory()
     {
         foreach (var step in Shipped.Plugins.SelectMany(p => p.Steps).Where(s => s.To is not null))

@@ -114,7 +114,10 @@ public sealed class PluginRowViewModel : ObservableObject
 
     public bool ShowsUpdateBadge => _status.UpdateAvailable;
 
-    public bool CanAct => HasHost && Versions.Count > 0 && !IsBusy;
+    public bool CanAct => HasHost && Versions.Count > 0 && !IsBusy && _status.BlockedBy is null;
+
+    public string BlockedNote =>
+        _status.BlockedBy is null ? "" : $"Disabled while {_status.BlockedBy} is installed — uninstall it first.";
 
     public bool ShowsChooseFolder => _status.Targets.Count <= 1;
 

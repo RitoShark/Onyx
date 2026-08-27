@@ -182,6 +182,37 @@ public class PluginManagerTests : IDisposable
         await Assert.ThrowsAsync<HostRunningException>(() => manager.UninstallAll("aventurine-blender", default));
     }
 
+    static HostInstance Thumbs() =>
+        new("thumbnails", "default", "Windows Explorer", @"C:\local\RitoShark\TexThumbnailProvider");
+
+    static HostInstance LtkThumbs() =>
+        new("ltkthumbs", "default", "Windows Explorer", @"C:\pf\LeagueToolkit\ltk-tex-thumb-handler");
+
+    [Fact]
+    public async Task An_installed_thumbnail_provider_blocks_the_alternative()
+    {
+        var state = StateStore.Load(_statePath);
+        state.Record("tex-thumbnails", "default", "v1.1.0", InstallJournal.Empty);
+        state.Save();
+
+        var statuses = await Build([Thumbs(), LtkThumbs()]).StatusAsync(default);
+
+        Assert.Equal("Texture Thumbnails", statuses.Single(s => s.Plugin.Id == "ltk-tex-thumbnails").BlockedBy);
+        Assert.Null(statuses.Single(s => s.Plugin.Id == "tex-thumbnails").BlockedBy);
+    }
+
+    [Fact]
+    public async Task An_externally_detected_provider_blocks_the_alternative_too()
+    {
+        var fs = new FakeFileSystem()
+            .WithFile(@"C:\pf\LeagueToolkit\ltk-tex-thumb-handler\ltk-tex-thumb-handler.dll");
+
+        var statuses = await Build([Thumbs(), LtkThumbs()], fs: fs).StatusAsync(default);
+
+        Assert.Equal("LTK Thumbnails", statuses.Single(s => s.Plugin.Id == "tex-thumbnails").BlockedBy);
+        Assert.Null(statuses.Single(s => s.Plugin.Id == "ltk-tex-thumbnails").BlockedBy);
+    }
+
     [Fact]
     public async Task Installing_an_unknown_tag_names_the_plugin_in_the_error()
     {

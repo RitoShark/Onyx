@@ -173,15 +173,46 @@ public class DetectorTests
     }
 
     [Fact]
-    public void PaintNet_finds_the_classic_install_and_the_store_build()
+    public void PaintNet_prefers_the_install_dir_and_never_doubles_up_with_the_store_folder()
     {
         var reg = new FakeRegistry()
             .WithValue(Hive.LocalMachine, @"SOFTWARE\paint.net", "TARGETDIR", @"C:\Program Files\paint.net\");
         var fs = new FakeFileSystem()
-            .WithDirectory(@"C:\Program Files\paint.net\FileTypes")
+            .WithFile(@"C:\Program Files\paint.net\paintdotnet.exe")
             .WithDirectory($@"{Folders.Documents}\paint.net App Files");
 
-        Assert.Equal(["classic", "store"], new PaintNetDetector(reg, fs, Folders).Detect().Select(h => h.InstanceId));
+        var only = Assert.Single(new PaintNetDetector(reg, fs, Folders).Detect());
+        Assert.Equal("classic", only.InstanceId);
+        Assert.Equal(@"C:\Program Files\paint.net", only.Path);
+    }
+
+    [Fact]
+    public void PaintNet_finds_a_per_user_install_without_the_registry()
+    {
+        var fs = new FakeFileSystem().WithFile($@"{Folders.LocalAppData}\paint.net\paintdotnet.exe");
+
+        var only = Assert.Single(new PaintNetDetector(new FakeRegistry(), fs, Folders).Detect());
+        Assert.Equal($@"{Folders.LocalAppData}\paint.net", only.Path);
+    }
+
+    [Fact]
+    public void PaintNet_skips_a_stale_registry_dir_whose_exe_is_gone()
+    {
+        var reg = new FakeRegistry()
+            .WithValue(Hive.LocalMachine, @"SOFTWARE\paint.net", "TARGETDIR", @"C:\gone\paint.net");
+        var fs = new FakeFileSystem().WithFile($@"{Folders.AppData}\paint.net\paintdotnet.exe");
+
+        var only = Assert.Single(new PaintNetDetector(reg, fs, Folders).Detect());
+        Assert.Equal($@"{Folders.AppData}\paint.net", only.Path);
+    }
+
+    [Fact]
+    public void PaintNet_falls_back_to_the_store_folder_when_no_install_dir_has_the_exe()
+    {
+        var fs = new FakeFileSystem().WithDirectory($@"{Folders.Documents}\paint.net App Files");
+
+        var only = Assert.Single(new PaintNetDetector(new FakeRegistry(), fs, Folders).Detect());
+        Assert.Equal("store", only.InstanceId);
     }
 
     [Fact]
