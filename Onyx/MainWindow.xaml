@@ -311,11 +311,14 @@
                                 BorderBrush="{DynamicResource Separator}"
                                 BorderThickness="1"
                                 CornerRadius="8"
-                                Padding="12,10"
+                                Padding="14,11"
                                 MinHeight="70">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <TextBlock Text="{Binding ReleaseNotes}"
+                                <TextBlock Text="{Binding About}"
                                            Style="{StaticResource CaptionText}"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           LineHeight="19"
+                                           LineStackingStrategy="BlockLineHeight"
                                            TextWrapping="Wrap" />
                             </ScrollViewer>
                         </Border>
@@ -325,6 +328,9 @@
                                 <Button Style="{StaticResource DangerLinkButton}"
                                         Content="Uninstall"
                                         Command="{Binding UninstallCommand}" />
+                                <Button Style="{StaticResource LinkButton}"
+                                        Content="GitHub"
+                                        Command="{Binding OpenRepoCommand}" />
                                 <Button Style="{StaticResource LinkButton}"
                                         Content="Choose folder…"
                                         Command="{Binding ChooseFolderCommand}"

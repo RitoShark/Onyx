@@ -61,6 +61,11 @@ public sealed class PluginRowViewModel : ObservableObject
             _owner.ShowDetail(this);
             return Task.CompletedTask;
         });
+        OpenRepoCommand = new RelayCommand(() =>
+        {
+            Process.Start(new ProcessStartInfo($"https://github.com/{status.Plugin.Repo}") { UseShellExecute = true });
+            return Task.CompletedTask;
+        });
     }
 
     public string PluginId => _status.Plugin.Id;
@@ -121,19 +126,12 @@ public sealed class PluginRowViewModel : ObservableObject
         set
         {
             if (!Set(ref _selectedVersion, value)) return;
-            Raise(nameof(ReleaseNotes));
             Raise(nameof(PrimaryActionLabel));
         }
     }
 
-    public string ReleaseNotes
-    {
-        get
-        {
-            var body = SelectedVersion?.Release.Body?.Trim();
-            return string.IsNullOrEmpty(body) ? "No release notes." : Strip(body);
-        }
-    }
+    public string About =>
+        string.IsNullOrEmpty(_status.Plugin.Description) ? _status.Plugin.Summary : _status.Plugin.Description;
 
     public bool IsBusy
     {
@@ -151,6 +149,7 @@ public sealed class PluginRowViewModel : ObservableObject
     public RelayCommand UninstallCommand { get; }
     public RelayCommand ChooseFolderCommand { get; }
     public RelayCommand DetailsCommand { get; }
+    public RelayCommand OpenRepoCommand { get; }
 
     bool SelectedIsInstalled => SelectedVersion?.Tag == _status.InstalledTag;
 
@@ -222,13 +221,4 @@ public sealed class PluginRowViewModel : ObservableObject
         "hematite" => "Hematite",
         _ => hostId
     };
-
-    static string Strip(string markdown)
-    {
-        var lines = markdown.Replace("\r", "").Split('\n')
-            .Select(line => line.TrimStart('#', ' ', '\t').Replace("**", "").Replace("`", ""))
-            .ToList();
-
-        return string.Join('\n', lines).Trim();
-    }
 }

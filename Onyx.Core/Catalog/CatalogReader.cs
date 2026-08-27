@@ -55,7 +55,8 @@ public static class CatalogReader
                     Str(p, "asset"),
                     steps,
                     variants,
-                    detect));
+                    detect,
+                    Opt(p, "description") ?? ""));
             }
 
             if (plugins.Count == 0)

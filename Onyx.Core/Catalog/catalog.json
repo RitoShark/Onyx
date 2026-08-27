@@ -1,11 +1,12 @@
 {
   "schema": 1,
-  "revision": 4,
+  "revision": 5,
   "plugins": [
     {
       "id": "ritotex-photoshop",
       "name": "RitoTex for Photoshop",
-      "summary": "Open and save .tex and .dds textures directly in Photoshop.",
+      "summary": "Open and save .tex textures in Photoshop like any other image.",
+      "description": "Teaches Photoshop to speak Riot's .tex texture format. Once installed, .tex files behave like any other image: File > Open a .tex, edit it like a PSD, Save As straight back to .tex — no converting, no round-tripping through other formats.\n\nIt also reads and writes .dds, supports every compression League uses (BC1, BC3, BC5, BC7, uncompressed), generates mipmaps automatically or from your layers, has normal-map flip and renormalize tools, and lets you preview the compression before saving. Works with 64-bit Photoshop CS6 through CC 2026.",
       "repo": "RitoShark/RitoTex-Photoshop",
       "host": "photoshop",
       "asset": "RitoTex.8bi",
@@ -24,8 +25,9 @@
     },
     {
       "id": "tex-paintnet",
-      "name": "Paint.NET .tex",
-      "summary": "Import and save League .tex files in Paint.NET.",
+      "name": "TEX for Paint.NET",
+      "summary": "Open and save .tex textures in Paint.NET.",
+      "description": "Adds League .tex support to Paint.NET. Open .tex files with File > Open or by dragging them in, and save them back with the right compression picked automatically — or choose the 'with options' file type to control the format, dithering and mipmaps yourself.\n\nHandles DXT1, DXT5, BC5, BC7 and uncompressed textures, with GPU-accelerated BC7 saving and full alpha support. Needs an up-to-date Paint.NET on Windows 10 or later.",
       "repo": "RitoShark/Paint.NET-Tex-Plugin",
       "host": "paintnet",
       "asset": "TexFileType-*.zip",
@@ -43,8 +45,9 @@
     },
     {
       "id": "tex-gimp",
-      "name": "GIMP .tex",
-      "summary": "Import and save League .tex files in GIMP.",
+      "name": "TEX for GIMP",
+      "summary": "Open and export .tex textures in GIMP — covers both GIMP 2 and 3.",
+      "description": "Loads and exports League .tex textures in GIMP. After installing, restart GIMP and .tex shows up in the normal open and export dialogs like any other image format.\n\nOne install covers everything: Onyx detects each GIMP version on your machine and puts the matching plugin into every one — GIMP 2 and GIMP 3 need different builds in different folders, and that's handled for you.",
       "repo": "RitoShark/Gimp-Tex-Plugin",
       "host": "gimp",
       "category": "textures",
@@ -90,7 +93,8 @@
     {
       "id": "ritoshark-maya",
       "name": "RitoShark for Maya",
-      "summary": "Open League models, skeletons, animations and map geometry natively in Maya.",
+      "summary": "Import and export League models, skeletons, animations and maps in Maya.",
+      "description": "League skin and map modding directly in Maya — .skn, .skl, .anm, .scb, .sco and .mapgeo appear under File > Import and File > Export Selection, no external converters needed. Built on the RitoShark library, so the file handling is the same battle-tested code as the rest of the tooling.\n\nAfter installing, open Windows > Settings/Preferences > Plug-in Manager in Maya and tick Loaded and Auto load next to ritoshark_plugin.py. Needs Maya 2023 or newer. Coexists fine with lol_maya if you have it.",
       "repo": "RitoShark/RitoShark-Maya",
       "host": "maya",
       "asset": "RitoShark-Maya-*.zip",
@@ -124,7 +128,8 @@
     {
       "id": "aventurine-blender",
       "name": "Aventurine for Blender",
-      "summary": "Native Blender addon for League models, animations and map geometry.",
+      "summary": "Import and export League models, skeletons and animations in Blender.",
+      "description": "A complete League toolkit inside Blender 4.0 and newer: import and export SKN meshes, SKL skeletons and ANM animations without any external converters. Everything lives in the 3D viewport's N-panel under the 'Aventurine LoL' tab.\n\nBeyond import and export it ships real animation tooling — a built-in physics simulation based on Wiggle 2 for hair and cloth, and animation retargeting to port animations between different character rigs.",
       "repo": "RitoShark/Aventurine-League-Tools",
       "host": "blender",
       "asset": "Aventurine-*.zip",
@@ -142,8 +147,9 @@
     },
     {
       "id": "tex-thumbnails",
-      "name": ".tex Explorer thumbnails",
-      "summary": "Show thumbnails for League .tex textures in Windows Explorer.",
+      "name": "Texture Thumbnails",
+      "summary": "See previews of .tex textures right in Windows Explorer.",
+      "description": "Makes Windows Explorer show real previews for .tex files — in the file list, the preview pane and the large-icon views — instead of a blank generic icon. It decodes the texture itself, so no app needs to be open and browsing a folder of skin textures just works.\n\nHandles every .tex format League uses, including BC7 and BC5 normal maps, and mipmapped files. One thing to know: Windows caches thumbnails, so files you browsed before installing keep their old blank look until the file changes or the thumbnail cache is cleared (Disk Cleanup > Thumbnails).",
       "repo": "RitoShark/TexThumbnailProvider",
       "host": "thumbnails",
       "asset": "TexThumbnailProvider.dll",
@@ -170,7 +176,8 @@
     {
       "id": "hematite",
       "name": "Hematite",
-      "summary": "Detects and fixes broken League skins from the command line.",
+      "summary": "Finds and fixes broken League skins — drag, drop, done.",
+      "description": "Repairs broken League skins. Drop a .fantome, .wad.client or .bin onto hematite-cli and it detects what's wrong, fixes it, and writes the file back. Point it at a folder to fix a whole batch, use --dry-run to preview without touching anything, or --check to just identify the champion and skin inside a file.\n\nThe fix rules are config-driven and update themselves from GitHub, so when Riot breaks something new, the fix usually arrives without you needing a new version of the tool.",
       "repo": "RitoShark/Hematite",
       "host": "hematite",
       "category": "misc",
