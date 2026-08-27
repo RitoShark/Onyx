@@ -32,10 +32,11 @@ executable the user replaces by hand.
 | GIMP 2 .tex | `RitoShark/Gimp-Tex-Plugin` | `GIMP2_TEX_Plugin_Windows.zip` | `%APPDATA%\GIMP\2.10\plug-ins\` |
 | GIMP 3 .tex | `RitoShark/Gimp-Tex-Plugin` | `GIMP3_TEX_Plugin_Windows.zip` | `%APPDATA%\GIMP\3.0\plug-ins\` |
 | RitoShark Maya | `RitoShark/RitoShark-Maya` | `RitoShark-Maya-*.zip` | `Documents\maya\<year>\` |
+| Aventurine for Blender | `RitoShark/Aventurine-League-Tools` | `Aventurine-*.zip` | `%APPDATA%\Blender Foundation\Blender\<ver>\scripts\addons\` |
 | .tex Explorer thumbnails | `RitoShark/TexThumbnailProvider` | `TexThumbnailProvider.dll`, `.sha256` | `%LOCALAPPDATA%\RitoShark\TexThumbnailProvider\` + regsvr32 |
 
-There is no Blender plugin repository yet. Onyx ships no Blender row and no
-disabled placeholder; the row appears when the catalog gains an entry.
+The Aventurine zip contains exactly one top-level `Aventurine/` directory, so its
+install is a single `copyDir` into the addons folder with no path rewriting.
 
 ## Stack
 
@@ -104,7 +105,7 @@ users through one JSON commit.
 
 ### Install verbs
 
-The engine understands exactly four verbs. This covers all six rows above and is
+The engine understands exactly four verbs. This covers all seven rows above and is
 deliberately not extensible into a scripting language.
 
 | Verb | Meaning |
@@ -128,10 +129,12 @@ install drives are found rather than guessed.
 | Paint.NET | The uninstall key's `TARGETDIR`; additionally the Microsoft Store build's per-user `Documents\paint.net App Files\`. |
 | GIMP 2 / 3 | The per-user plug-ins directory under `%APPDATA%\GIMP\<ver>\`, which exists independent of where the program is installed. |
 | Maya | `HKLM\SOFTWARE\Autodesk\Maya\<year>\Setup\InstallPath` for the set of installed years; files go to `Documents\maya\<year>\`, matching the existing `install.py`. |
+| Blender | The version directories under `%APPDATA%\Blender Foundation\Blender\`. That folder is both the enumeration source and the install root, so Blender needs no registry read and never needs elevation. |
 | Thumbnail provider | No host. Fixed per-user path. |
 
 A host can resolve to several instances (Photoshop 2023 and 2025; Maya 2024 and
-2026). Each instance is its own row state: installed version, files written,
+2026; Blender 4.0, 4.1 and 4.3 — all three are present on the development
+machine). Each instance is its own row state: installed version, files written,
 update availability.
 
 Every host row also offers **Choose folder…**, persisted per instance, for
@@ -238,6 +241,8 @@ Win11 without the Win10 appearance regressing.
 xunit over `Onyx.Core`:
 
 - catalog parsing, including an unknown verb and an unknown schema being rejected
+- Blender and Maya version-directory enumeration, including a directory whose name
+  is not a version number
 - asset glob matching against real release asset names
 - version ordering and update-availability, including pre-releases
 - plan generation against an in-memory filesystem, per plugin
