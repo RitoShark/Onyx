@@ -45,15 +45,15 @@ public class ProcessGuardTests
     }
 
     [Fact]
-    public void The_thumbnail_host_is_guarded_by_explorer()
+    public void The_thumbnail_host_is_not_guarded_because_explorer_always_runs()
     {
-        Assert.Contains("explorer", ProcessGuard.ProcessNamesFor("thumbnails"), StringComparer.OrdinalIgnoreCase);
+        Assert.Empty(ProcessGuard.ProcessNamesFor("thumbnails"));
     }
 
     [Fact]
-    public void Every_host_the_catalog_names_has_a_guard()
+    public void Every_host_that_can_hold_unsaved_work_has_a_guard()
     {
-        foreach (var host in new[] { "blender", "maya", "gimp", "paintnet", "photoshop", "thumbnails" })
+        foreach (var host in new[] { "blender", "maya", "gimp", "paintnet", "photoshop" })
             Assert.NotEmpty(ProcessGuard.ProcessNamesFor(host));
     }
 

@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="SurfaceColor">#FFFFFFFF</Color>
+    <Color x:Key="SurfaceRaisedColor">#FFF5F5F7</Color>
+    <Color x:Key="SurfaceSunkenColor">#FFFAFAFC</Color>
+    <Color x:Key="SeparatorColor">#FFE3E3E6</Color>
+    <Color x:Key="TextPrimaryColor">#FF1D1D1F</Color>
+    <Color x:Key="TextSecondaryColor">#FF6E6E73</Color>
+    <Color x:Key="AccentColor">#FF0071E3</Color>
+    <Color x:Key="AccentPressedColor">#FF0058B8</Color>
+    <Color x:Key="AccentTextColor">#FFFFFFFF</Color>
+    <Color x:Key="ControlColor">#FFF0F0F2</Color>
+    <Color x:Key="ControlPressedColor">#FFE2E2E5</Color>
+    <Color x:Key="SuccessColor">#FF1D8F44</Color>
+    <Color x:Key="ScrimColor">#40000000</Color>
+
+    <SolidColorBrush x:Key="Surface" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SurfaceRaised" Color="{StaticResource SurfaceRaisedColor}" />
+    <SolidColorBrush x:Key="SurfaceSunken" Color="{StaticResource SurfaceSunkenColor}" />
+    <SolidColorBrush x:Key="Separator" Color="{StaticResource SeparatorColor}" />
+    <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextSecondary" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="Accent" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentPressed" Color="{StaticResource AccentPressedColor}" />
+    <SolidColorBrush x:Key="AccentText" Color="{StaticResource AccentTextColor}" />
+    <SolidColorBrush x:Key="Control" Color="{StaticResource ControlColor}" />
+    <SolidColorBrush x:Key="ControlPressed" Color="{StaticResource ControlPressedColor}" />
+    <SolidColorBrush x:Key="Success" Color="{StaticResource SuccessColor}" />
+    <SolidColorBrush x:Key="Scrim" Color="{StaticResource ScrimColor}" />
+
+</ResourceDictionary>

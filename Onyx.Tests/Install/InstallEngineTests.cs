@@ -183,4 +183,38 @@ public class InstallEngineTests
     {
         Engine(new FakeFileSystem()).Revert(InstallJournal.Empty);
     }
+
+    sealed class LockedFileSystem(FakeFileSystem inner, string lockedTarget) : Core.Hosts.IFileSystem
+    {
+        public bool DirectoryExists(string path) => inner.DirectoryExists(path);
+        public bool FileExists(string path) => inner.FileExists(path);
+        public IReadOnlyList<string> Directories(string path) => inner.Directories(path);
+        public IReadOnlyList<string> Files(string path) => inner.Files(path);
+        public void CreateDirectory(string path) => inner.CreateDirectory(path);
+        public void DeleteFile(string path) => inner.DeleteFile(path);
+        public void DeleteDirectory(string path) => inner.DeleteDirectory(path);
+
+        public void Copy(string from, string to, bool overwrite)
+        {
+            if (string.Equals(to, lockedTarget, StringComparison.OrdinalIgnoreCase))
+                throw new IOException("The process cannot access the file", unchecked((int)0x80070020));
+
+            inner.Copy(from, to, overwrite);
+        }
+    }
+
+    [Fact]
+    public void A_locked_target_surfaces_as_a_FileLockedException_naming_the_file()
+    {
+        var inner = new FakeFileSystem().WithFile(@"C:\payload\TexThumbnailProvider.dll");
+        var fs = new LockedFileSystem(inner, @"C:\local\TexThumbnailProvider.dll");
+        var engine = new InstallEngine(fs, new FakeRegistrar(), new FakeChecksum());
+
+        var ex = Assert.Throws<FileLockedException>(() => engine.Apply(
+            Plan(new PlannedOperation(StepVerb.Copy, "TexThumbnailProvider.dll", @"C:\local\TexThumbnailProvider.dll")),
+            new FakePayload(@"C:\payload")));
+
+        Assert.Equal(@"C:\local\TexThumbnailProvider.dll", ex.Path);
+        Assert.Contains("TexThumbnailProvider.dll", ex.Message);
+    }
 }

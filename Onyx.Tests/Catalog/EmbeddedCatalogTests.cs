@@ -27,9 +27,9 @@ public class EmbeddedCatalogTests
     }
 
     [Fact]
-    public void Every_plugin_targets_a_host_that_has_a_process_guard()
+    public void Every_plugin_with_a_launchable_host_has_a_process_guard()
     {
-        foreach (var plugin in Shipped.Plugins)
+        foreach (var plugin in Shipped.Plugins.Where(p => p.Host != "thumbnails"))
             Assert.NotEmpty(ProcessGuard.ProcessNamesFor(plugin.Host));
     }
 

@@ -23,8 +23,7 @@ public sealed class ProcessGuard(IProcessTable table)
         ["paintnet"] = ["paintdotnet", "PaintDotNet"],
         ["gimp"] = ["gimp-2.10", "gimp-3.0", "gimp"],
         ["maya"] = ["maya"],
-        ["blender"] = ["blender"],
-        ["thumbnails"] = ["explorer"]
+        ["blender"] = ["blender"]
     };
 
     public static IReadOnlyList<string> ProcessNamesFor(string hostId) =>

@@ -14,3 +14,9 @@ public sealed record InstallPlan(
     IReadOnlyList<PlannedOperation> Operations);
 
 public sealed class PlanException(string message) : Exception(message);
+
+public sealed class FileLockedException(string path)
+    : Exception($"Another program is holding {System.IO.Path.GetFileName(path)} open, so it could not be replaced.")
+{
+    public string Path { get; } = path;
+}

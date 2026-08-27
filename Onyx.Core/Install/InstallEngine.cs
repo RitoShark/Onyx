@@ -85,9 +85,28 @@ public sealed class InstallEngine(IFileSystem fs, IRegistrar registrar, IChecksu
             throw new PlanException($"Payload is missing '{op.From}'.");
 
         fs.CreateDirectory(Path.GetDirectoryName(op.To!)!);
-        fs.Copy(from, op.To!, overwrite: true);
+        Copy(from, op.To!);
         return op.To!;
     }
+
+    void Copy(string from, string to)
+    {
+        try
+        {
+            fs.Copy(from, to, overwrite: true);
+        }
+        catch (IOException e) when (IsSharingViolation(e))
+        {
+            throw new FileLockedException(to);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw new FileLockedException(to);
+        }
+    }
+
+    static bool IsSharingViolation(IOException e) =>
+        (e.HResult & 0xFFFF) is 32 or 33;
 
     IReadOnlyList<string> CopyTree(IPayload payload, PlannedOperation op)
     {
@@ -107,7 +126,7 @@ public sealed class InstallEngine(IFileSystem fs, IRegistrar registrar, IChecksu
         foreach (var file in fs.Files(from))
         {
             var target = Path.Combine(to, Path.GetFileName(file));
-            fs.Copy(file, target, overwrite: true);
+            Copy(file, target);
             written.Add(target);
         }
 
