@@ -25,6 +25,7 @@ public sealed class MainViewModel : ObservableObject
         ("misc", "Standalone Tools", "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M 3.29,7 L 12,12 L 20.71,7 m7.5 4.27 9 5.15")
     ];
 
+    readonly SemaphoreSlim _oneAtATime = new(1, 1);
     readonly DispatcherTimer _refreshTimer;
     string _statusMessage = "";
     string _lastChecked = "";
@@ -148,6 +149,7 @@ public sealed class MainViewModel : ObservableObject
 
     public async Task RunGuardedAsync(string hostId, string hostLabel, Func<Task> action)
     {
+        await _oneAtATime.WaitAsync();
         try
         {
             await action();
@@ -164,6 +166,10 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception e)
         {
             StatusMessage = e is PlanException ? e.Message : $"{hostLabel}: {e.Message}";
+        }
+        finally
+        {
+            _oneAtATime.Release();
         }
     }
 

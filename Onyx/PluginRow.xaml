@@ -77,33 +77,82 @@
                            Visibility="{Binding BlockedNote, Converter={StaticResource NotEmptyToVisibility}}" />
             </StackPanel>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="{Binding VersionChip}"
-                           Style="{StaticResource CaptionText}"
-                           VerticalAlignment="Center"
-                           Margin="0,0,12,0" />
+            <Grid Grid.Column="2" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding VersionChip}"
+                               Style="{StaticResource CaptionText}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,12,0" />
 
-                <Button Style="{StaticResource PrimaryButton}"
-                        Content="{Binding PrimaryActionLabel}"
-                        Command="{Binding InstallCommand}"
-                        IsEnabled="{Binding CanAct}" />
+                    <Button Style="{StaticResource PrimaryButton}"
+                            Content="{Binding PrimaryActionLabel}"
+                            Command="{Binding InstallCommand}"
+                            IsEnabled="{Binding CanAct}" />
 
-                <Button Style="{StaticResource ChromeButton}"
-                        Command="{Binding DetailsCommand}"
-                        Margin="4,0,0,0"
-                        ToolTip="Details">
-                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Path Data="M 0,0 L 4,4 L 0,8"
-                              Stroke="{DynamicResource TextSecondary}"
-                              StrokeThickness="1.5"
-                              StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round"
-                              StrokeLineJoin="Round"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center" />
+                    <Button Style="{StaticResource ChromeButton}"
+                            Command="{Binding DetailsCommand}"
+                            Margin="4,0,0,0"
+                            ToolTip="Details">
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Path Data="M 0,0 L 4,4 L 0,8"
+                                  Stroke="{DynamicResource TextSecondary}"
+                                  StrokeThickness="1.5"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
+                        </Grid>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                    <Grid Width="16" Height="16" VerticalAlignment="Center">
+                        <Ellipse Stroke="{DynamicResource Separator}" StrokeThickness="2" />
+                        <Ellipse Stroke="{DynamicResource Accent}"
+                                 StrokeThickness="2"
+                                 StrokeDashArray="6 20"
+                                 StrokeDashCap="Round"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform />
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard x:Name="Spin">
+                                                    <Storyboard RepeatBehavior="Forever">
+                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                         From="0" To="360" Duration="0:0:0.9" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="Spin" />
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
                     </Grid>
-                </Button>
-            </StackPanel>
+
+                    <TextBlock Text="{Binding BusyMessage}"
+                               Style="{StaticResource CaptionText}"
+                               Foreground="{DynamicResource TextSecondary}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="220"
+                               Margin="10,0,0,0" />
+                </StackPanel>
+
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

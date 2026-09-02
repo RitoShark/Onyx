@@ -41,6 +41,7 @@ public sealed class PluginRowViewModel : ObservableObject
     readonly MainViewModel _owner;
     readonly PluginStatus _status;
     VersionChoice? _selectedVersion;
+    string _busyMessage = "";
     bool _isBusy;
 
     public PluginRowViewModel(MainViewModel owner, PluginStatus status)
@@ -143,9 +144,18 @@ public sealed class PluginRowViewModel : ObservableObject
         {
             if (!Set(ref _isBusy, value)) return;
             Raise(nameof(CanAct));
+            Raise(nameof(IsIdle));
             InstallCommand.Refresh();
             UninstallCommand.Refresh();
         }
+    }
+
+    public bool IsIdle => !IsBusy;
+
+    public string BusyMessage
+    {
+        get => _busyMessage;
+        private set => Set(ref _busyMessage, value);
     }
 
     public RelayCommand InstallCommand { get; }
@@ -162,34 +172,33 @@ public sealed class PluginRowViewModel : ObservableObject
     {
         if (SelectedVersion is null) return;
 
-        IsBusy = true;
-        try
-        {
-            await _owner.RunGuardedAsync(
-                _status.Plugin.Host,
-                HostDisplay,
-                () => _owner.Services.Manager.InstallAsync(
-                    _status.Plugin.Id, SelectedVersion.Tag, CancellationToken.None));
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        var tag = SelectedVersion.Tag;
+        await RunAsync($"Preparing {tag}", progress => _owner.Services.Manager.InstallAsync(
+            _status.Plugin.Id, tag, CancellationToken.None, progress));
     }
 
-    async Task UninstallAsync()
+    async Task UninstallAsync() =>
+        await RunAsync("Removing", progress => _owner.Services.Manager.UninstallAll(
+            _status.Plugin.Id, CancellationToken.None, progress));
+
+    async Task RunAsync(string first, Func<IProgress<string>, Task> action)
     {
+        BusyMessage = first;
         IsBusy = true;
+
+        var progress = new Progress<string>(message => BusyMessage = message);
+
         try
         {
             await _owner.RunGuardedAsync(
                 _status.Plugin.Host,
                 HostDisplay,
-                () => _owner.Services.Manager.UninstallAll(_status.Plugin.Id, CancellationToken.None));
+                () => Task.Run(() => action(progress)));
         }
         finally
         {
             IsBusy = false;
+            BusyMessage = "";
         }
     }
 

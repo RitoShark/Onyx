@@ -261,6 +261,38 @@ public class PluginManagerTests : IDisposable
     }
 
     [Fact]
+    public async Task Install_reports_each_stage_and_names_the_instance()
+    {
+        var sandbox = Path.Combine(Path.GetTempPath(), $"onyx-mgr-{Guid.NewGuid():N}");
+        try
+        {
+            HostInstance Real(string v) =>
+                new("blender", v, $"Blender {v}", Path.Combine(sandbox, v));
+
+            var manager = Build(
+                [Real("4.1"), Real("4.3")],
+                fs: new Onyx.Core.Platform.PhysicalFileSystem());
+
+            var stages = new List<string>();
+            await manager.InstallAsync(
+                "aventurine-blender", "3.1.5", default, new SynchronousProgress(stages.Add));
+
+            Assert.Contains(stages, m => m.StartsWith("Downloading 3.1.5"));
+            Assert.Contains("Installing into Blender 4.1  ·  1 of 2", stages);
+            Assert.Contains("Installing into Blender 4.3  ·  2 of 2", stages);
+        }
+        finally
+        {
+            if (Directory.Exists(sandbox)) Directory.Delete(sandbox, recursive: true);
+        }
+    }
+
+    sealed class SynchronousProgress(Action<string> report) : IProgress<string>
+    {
+        public void Report(string value) => report(value);
+    }
+
+    [Fact]
     public async Task Mixed_versions_across_instances_read_as_mixed()
     {
         var state = StateStore.Load(_statePath);

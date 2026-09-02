@@ -114,7 +114,8 @@ public sealed class PluginManager(
             : new PluginTarget(host, null, false, false);
     }
 
-    public async Task InstallAsync(string pluginId, string tag, CancellationToken ct)
+    public async Task InstallAsync(
+        string pluginId, string tag, CancellationToken ct, IProgress<string>? progress = null)
     {
         var plugin = Find(pluginId);
         var instances = InstancesFor(plugin);
@@ -123,19 +124,25 @@ public sealed class PluginManager(
 
         RequireClosed(plugin.Host, instances[0].Label);
 
-        foreach (var host in instances)
-            await InstallIntoAsync(plugin, host, tag, ct);
+        for (var i = 0; i < instances.Count; i++)
+            await InstallIntoAsync(plugin, instances[i], tag, ct, Step(progress, i, instances.Count));
     }
 
-    public async Task InstallIntoAsync(string pluginId, string instanceId, string tag, CancellationToken ct)
+    public async Task InstallIntoAsync(
+        string pluginId, string instanceId, string tag, CancellationToken ct,
+        IProgress<string>? progress = null)
     {
         var (plugin, host) = Locate(pluginId, instanceId);
         RequireClosed(plugin.Host, host.Label);
-        await InstallIntoAsync(plugin, host, tag, ct);
+        await InstallIntoAsync(plugin, host, tag, ct, progress);
     }
 
-    async Task InstallIntoAsync(PluginEntry plugin, HostInstance host, string tag, CancellationToken ct)
+    async Task InstallIntoAsync(
+        PluginEntry plugin, HostInstance host, string tag, CancellationToken ct,
+        IProgress<string>? progress)
     {
+        progress?.Report($"Checking {tag}");
+
         var releases = await ReleasesAsync(plugin.Repo, ct);
         var release = releases.FirstOrDefault(r => r.Tag == tag)
             ?? throw new PlanException($"{plugin.Name} has no release tagged '{tag}'.");
@@ -145,14 +152,30 @@ public sealed class PluginManager(
 
         var plan = PlanResolver.Resolve(plugin, host, release);
 
+        if (state.Find(plugin.Id, host.InstanceId) is not null)
+            progress?.Report("Removing the installed version");
+
         await UninstallAsync(plugin.Id, host.InstanceId, ct);
 
+        progress?.Report($"Downloading {release.Tag}");
         using var payload = await payloads.FetchAsync(plan, ct);
+
+        progress?.Report($"Installing into {host.Label}");
         var journal = await ApplyAsync(plan, payload, ct);
 
         state.Record(plugin.Id, host.InstanceId, release.Tag, journal);
         state.Save();
     }
+
+    sealed class Relay(Action<string> report) : IProgress<string>
+    {
+        public void Report(string value) => report(value);
+    }
+
+    static IProgress<string>? Step(IProgress<string>? progress, int index, int count) =>
+        progress is null || count < 2
+            ? progress
+            : new Relay(m => progress.Report($"{m}  ·  {index + 1} of {count}"));
 
     async Task<InstallJournal> ApplyAsync(InstallPlan plan, IPayload payload, CancellationToken ct)
     {
@@ -182,14 +205,18 @@ public sealed class PluginManager(
         catch (IOException) { }
     }
 
-    public async Task UninstallAll(string pluginId, CancellationToken ct)
+    public async Task UninstallAll(
+        string pluginId, CancellationToken ct, IProgress<string>? progress = null)
     {
         var plugin = Find(pluginId);
         var instances = InstancesFor(plugin);
         if (instances.Count > 0) RequireClosed(plugin.Host, instances[0].Label);
 
         foreach (var host in instances)
+        {
+            progress?.Report($"Removing from {host.Label}");
             await UninstallAsync(pluginId, host.InstanceId, ct);
+        }
 
         state.Save();
     }
