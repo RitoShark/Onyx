@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Onyx</title>
+  <desc>A fractured charcoal gemstone with emerald facets and an open crystalline core.</desc>
+  <path fill="#080F0C" d="M256 20 L408 108 L468 274 L382 428 L256 494 L104 414 L44 246 L120 88 Z"/>
+  <path fill="#72E6A4" d="M256 42 L256 136 L168 190 L136 106 Z"/>
+  <path fill="#3FC982" d="M256 42 L391 122 L340 182 L256 136 Z"/>
+  <path fill="#263D33" d="M391 122 L446 272 L362 270 L340 182 Z"/>
+  <path fill="#17281F" d="M446 272 L368 411 L324 338 L362 270 Z"/>
+  <path fill="#345747" d="M368 411 L256 470 L256 372 L324 338 Z"/>
+  <path fill="#20382C" d="M256 470 L121 399 L182 330 L256 372 Z"/>
+  <path fill="#23975D" d="M121 399 L66 247 L154 244 L182 330 Z"/>
+  <path fill="#4ED58B" d="M66 247 L136 106 L168 190 L154 244 Z"/>
+  <path fill="#ACF4C7" d="M136 106 L256 42 L168 151 L168 190 Z"/>
+  <path fill="#218454" d="M256 136 L340 182 L362 270 L335 252 L317 198 L256 165 Z"/>
+  <path fill="#39654E" d="M362 270 L324 338 L256 372 L256 343 L303 315 L335 252 Z"/>
+  <path fill="#0D1C14" d="M256 343 L256 372 L182 330 L154 244 L168 190 L192 207 L181 245 L203 308 Z"/>
+  <path fill="#79E4A4" d="M66 247 L154 244 L121 399 L120 285 Z"/>
+  <path fill="#101C16" d="M121 399 L203 376 L256 470 Z"/>
+  <path fill="#4A7960" d="M368 411 L324 338 L446 272 L359 371 Z"/>
+</svg>

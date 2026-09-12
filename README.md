@@ -1,5 +1,7 @@
 # Onyx
 
+<img src="Onyx/Assets/onyx-logo.svg" alt="Onyx" width="112" />
+
 One window that installs, updates, downgrades and removes every RitoShark plugin.
 
 Each plugin used to ship its own installer, PowerShell script or copy-these-files
@@ -67,6 +69,16 @@ dotnet publish Onyx/Onyx.csproj -c Release -r win-x64 --self-contained -p:Publis
 ```
 
 The published `Onyx.exe` is self-contained: no .NET runtime to install first.
+
+## Appearance
+
+Onyx uses a dark charcoal theme with emerald accents, alongside the faceted mineral
+identity of Flint, Hematite and Quartz. Theme colors live in
+[`Onyx/Theme/Onyx.xaml`](Onyx/Theme/Onyx.xaml).
+
+The logo source is [`onyx-logo.svg`](Onyx/Assets/onyx-logo.svg). After editing it, run
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-BrandAssets.ps1`
+to regenerate the WPF vector resource, transparent PNG and Windows icon.
 
 ## Licence
 

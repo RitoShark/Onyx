@@ -11,6 +11,7 @@
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <DebugType>none</DebugType>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationIcon>Assets\onyx.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>Onyx</AssemblyName>
     <RootNamespace>Onyx</RootNamespace>
@@ -22,6 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\onyx.ico" />
+    <Resource Include="Assets\onyx-logo.png" />
     <Resource Include="Assets\hematite-logo.png" />
     <Resource Include="Assets\blender-logo.png" />
     <Resource Include="Assets\gimp-logo.png" />

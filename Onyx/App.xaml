@@ -5,7 +5,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Theme/Quartz.xaml" />
+                <ResourceDictionary Source="Theme/Onyx.xaml" />
+                <ResourceDictionary Source="Assets/Brand.xaml" />
                 <ResourceDictionary Source="Theme/Typography.xaml" />
                 <ResourceDictionary Source="Theme/Controls.xaml" />
                 <ResourceDictionary Source="Theme/Window.xaml" />
