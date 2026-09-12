@@ -35,6 +35,11 @@ public sealed class MainViewModel : ObservableObject
     {
         Services = services;
         RefreshCommand = new RelayCommand(() => RefreshAsync(fromNetwork: true), () => !IsBusy);
+        CloseDetailCommand = new RelayCommand(() =>
+        {
+            Detail = null;
+            return Task.CompletedTask;
+        });
 
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(6) };
         _refreshTimer.Tick += async (_, _) => await RefreshAsync(fromNetwork: true);
@@ -58,11 +63,7 @@ public sealed class MainViewModel : ObservableObject
 
     public bool IsDetailOpen => _detail is not null;
 
-    public RelayCommand CloseDetailCommand => new(() =>
-    {
-        Detail = null;
-        return Task.CompletedTask;
-    });
+    public RelayCommand CloseDetailCommand { get; }
 
     public void ShowDetail(PluginRowViewModel row) => Detail = row;
     public ObservableCollection<SectionViewModel> Groups { get; } = [];
@@ -92,6 +93,23 @@ public sealed class MainViewModel : ObservableObject
 
     public async Task RefreshAsync(bool fromNetwork)
     {
+        await _oneAtATime.WaitAsync();
+        try
+        {
+            await RefreshCoreAsync(fromNetwork);
+        }
+        catch (Exception e)
+        {
+            StatusMessage = $"Could not refresh plugins: {e.Message}";
+        }
+        finally
+        {
+            _oneAtATime.Release();
+        }
+    }
+
+    async Task RefreshCoreAsync(bool fromNetwork)
+    {
         IsBusy = true;
         StatusMessage = "";
 
@@ -107,6 +125,7 @@ public sealed class MainViewModel : ObservableObject
                 }
                 catch (Exception)
                 {
+                    StatusMessage = "Catalog unavailable; using the saved catalog.";
                 }
             }
 
@@ -153,7 +172,7 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             await action();
-            await RefreshAsync(fromNetwork: false);
+            await RefreshCoreAsync(fromNetwork: false);
         }
         catch (HostRunningException)
         {

@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Onyx.Core\Onyx.Core.csproj" />
+    <Compile Include="..\Onyx\ViewModels\RelayCommand.cs" Link="ViewModels\RelayCommand.cs" />
   </ItemGroup>
 
   <ItemGroup>
