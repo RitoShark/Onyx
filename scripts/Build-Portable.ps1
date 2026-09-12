@@ -1,8 +1,13 @@
-param([switch]$NoRestore)
+param(
+    [switch]$NoRestore,
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string]$Version
+)
 
 $ErrorActionPreference = 'Stop'
 $restoreArguments = @()
 if ($NoRestore) { $restoreArguments += '--no-restore' }
+if ($Version) { $restoreArguments += "-p:Version=$Version" }
 $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $project = Join-Path $repository 'Onyx/Onyx.csproj'
 $output = Join-Path $repository 'artifacts/portable'

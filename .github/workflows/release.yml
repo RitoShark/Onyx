@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+      - name: Validate release tag
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -ne 'tag' -or $env:GITHUB_REF_NAME -notmatch '^v(\d+\.\d+\.\d+)$') {
+            throw 'Run releases from a vMAJOR.MINOR.PATCH tag.'
+          }
+          "RELEASE_VERSION=$($Matches[1])" >> $env:GITHUB_ENV
+      - name: Test core and Windows view models
+        run: dotnet test Onyx.sln -c Release
+      - name: Publish portable EXE
+        shell: pwsh
+        run: ./scripts/Build-Portable.ps1 -NoRestore -Version $env:RELEASE_VERSION
+      - name: Write checksum and release notes
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash artifacts/portable/Onyx.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  Onyx.exe" | Set-Content artifacts/portable/Onyx.exe.sha256 -Encoding ascii
+          @'
+          Download **Onyx.exe** and run it on 64-bit Windows. No installer or separate .NET runtime is needed.
+
+          Onyx installs, updates, switches versions, and removes RitoShark plugins for your image editors and 3D software. Update defaults to the latest stable plugin release.
+
+          To replace an older Onyx build, close it first and replace the EXE. Installation records and caches stay under `%LOCALAPPDATA%\RitoShark\Onyx`.
+
+          `Onyx.exe.sha256` contains the SHA-256 checksum for the download.
+          '@ | Set-Content release-notes.md -Encoding utf8
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME artifacts/portable/Onyx.exe artifacts/portable/Onyx.exe.sha256 --verify-tag --draft --title "Onyx $env:GITHUB_REF_NAME" --notes-file release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'Could not create the draft release and upload its assets.' }
+          gh release edit $env:GITHUB_REF_NAME --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish the release.' }

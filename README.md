@@ -154,6 +154,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Portable.ps1
 The portable build is `artifacts/portable/Onyx.exe`. Distribute that file by itself.
 The build script bundles the runtime and omits separate debug symbols.
 
+GitHub Actions tests pushes and pull requests to `main`. Pushing a tag such as
+`v1.0.0` runs the release workflow, stamps the executable with that version, and
+publishes `Onyx.exe` and its SHA-256 checksum. A manual release run must also select
+an existing version tag.
+
 </details>
 
 <details>

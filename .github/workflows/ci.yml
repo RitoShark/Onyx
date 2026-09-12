@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
+      - name: Test core and Windows view models
+        run: dotnet test Onyx.sln -c Release
+      - name: Build portable EXE
+        shell: pwsh
+        run: ./scripts/Build-Portable.ps1 -NoRestore
