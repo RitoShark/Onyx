@@ -14,19 +14,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Height="40">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                <Image Source="{StaticResource OnyxLogo}" Width="20" Height="24" VerticalAlignment="Center" />
-                <TextBlock Text="Onyx"
-                           Style="{StaticResource CaptionText}"
-                           Foreground="{DynamicResource TextPrimary}"
-                           FontWeight="SemiBold"
-                           Margin="8,0,0,0"
-                           VerticalAlignment="Center" />
-            </StackPanel>
-
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
@@ -84,7 +75,7 @@
 
             <Button Grid.Column="1"
                     Style="{StaticResource PillButton}"
-                    Content="Check for Updates"
+                    Content="Refresh plugins"
                     VerticalAlignment="Center"
                     Command="{Binding RefreshCommand}" />
         </Grid>
@@ -130,8 +121,29 @@
 
         </Grid>
 
-        <local:PluginDetail Grid.Row="0" Grid.RowSpan="3" />
+        <Border Grid.Row="3" Background="{DynamicResource SurfaceRaised}"
+                BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0"
+                CornerRadius="0,0,10,10" Padding="24,0" Height="34">
+            <Grid DataContext="{Binding AppUpdate}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding VersionLabel}" Style="{StaticResource CaptionText}"
+                           VerticalAlignment="Center" ToolTip="Onyx version" />
+                <TextBlock Grid.Column="1" Text="{Binding Status}" Style="{StaticResource CaptionText}"
+                           Foreground="{DynamicResource TextMuted}" Margin="16,0"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                           ToolTip="{Binding Detail}" />
+                <Button Grid.Column="2" Style="{StaticResource LinkButton}"
+                        Content="{Binding ActionLabel}" Command="{Binding ActionCommand}"
+                        ToolTip="{Binding Detail}" VerticalAlignment="Center" Padding="0" FontSize="12" />
+            </Grid>
+        </Border>
 
-        <local:ConfirmationSheet Grid.Row="0" Grid.RowSpan="3" />
+        <local:PluginDetail Grid.Row="0" Grid.RowSpan="4" />
+
+        <local:ConfirmationSheet Grid.Row="0" Grid.RowSpan="4" />
     </Grid>
 </Window>

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Windows.Threading;
 using Onyx.Core.Install;
 using Onyx.Core.Processes;
+using Onyx.Core.Releases;
 
 namespace Onyx.ViewModels;
 
@@ -34,6 +35,7 @@ public sealed class MainViewModel : ObservableObject
     public MainViewModel(Services services)
     {
         Services = services;
+        AppUpdate = new AppUpdateViewModel(ct => new GitHubClient(Services.Http).ListReleasesAsync(AppRelease.Repository, ct));
         RefreshCommand = new RelayCommand(() => RefreshAsync(fromNetwork: true), () => !IsBusy);
         CloseDetailCommand = new RelayCommand(() =>
         {
@@ -50,6 +52,7 @@ public sealed class MainViewModel : ObservableObject
 
     public Services Services { get; }
     public SheetViewModel Sheet { get; } = new();
+    public AppUpdateViewModel AppUpdate { get; }
 
     public PluginRowViewModel? Detail
     {

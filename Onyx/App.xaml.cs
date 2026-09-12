@@ -24,6 +24,7 @@ public partial class App : Application
         window.Show();
 
         _ = model.RefreshAsync(fromNetwork: true);
+        _ = model.AppUpdate.CheckAsync();
     }
 
     static int RunElevatedJob(string jobPath)

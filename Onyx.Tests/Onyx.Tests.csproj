@@ -21,6 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Onyx.Core\Onyx.Core.csproj" />
     <Compile Include="..\Onyx\ViewModels\RelayCommand.cs" Link="ViewModels\RelayCommand.cs" />
+    <Compile Include="..\Onyx\ViewModels\ObservableObject.cs" Link="ViewModels\ObservableObject.cs" />
+    <Compile Include="..\Onyx\ViewModels\AppUpdateViewModel.cs" Link="ViewModels\AppUpdateViewModel.cs" />
   </ItemGroup>
 
   <ItemGroup>

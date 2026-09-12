@@ -72,13 +72,18 @@ The published `Onyx.exe` is self-contained: no .NET runtime to install first.
 
 ## Appearance
 
-Onyx uses a dark charcoal theme with emerald accents, alongside the faceted mineral
+Onyx uses a neutral charcoal theme with muted sage accents, alongside the faceted mineral
 identity of Flint, Hematite and Quartz. Theme colors live in
 [`Onyx/Theme/Onyx.xaml`](Onyx/Theme/Onyx.xaml).
 
 The logo source is [`onyx-logo.svg`](Onyx/Assets/onyx-logo.svg). After editing it, run
 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-BrandAssets.ps1`
 to regenerate the WPF vector resource, transparent PNG and Windows icon.
+
+The bottom bar shows the running Onyx version and checks for app updates at launch.
+When a newer stable release is available, its download link opens the GitHub release
+page. An unavailable or private release repository is shown as an unavailable check.
+The **Refresh plugins** button checks the managed plugins separately.
 
 ## Licence
 
