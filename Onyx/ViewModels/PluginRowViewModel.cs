@@ -50,7 +50,9 @@ public sealed class PluginRowViewModel : ObservableObject
         _status = status;
 
         Versions = new ObservableCollection<VersionChoice>(status.Releases.Select(r => new VersionChoice(r)));
-        _selectedVersion = Versions.FirstOrDefault(v => v.Tag == status.InstalledTag) ?? Versions.FirstOrDefault();
+        _selectedVersion = Versions.FirstOrDefault(v => v.Tag == status.Latest?.Tag)
+            ?? Versions.FirstOrDefault(v => v.Tag == status.InstalledTag)
+            ?? Versions.FirstOrDefault();
 
         Targets = new ObservableCollection<TargetViewModel>(status.Targets.Select(t => new TargetViewModel(t)));
 
@@ -110,8 +112,8 @@ public sealed class PluginRowViewModel : ObservableObject
 
     public string PrimaryActionLabel =>
         !Installed ? "Install" :
-        _status.UpdateAvailable ? "Update" :
-        SelectedIsInstalled ? "Reinstall" : "Switch";
+        SelectedIsInstalled ? "Reinstall" :
+        _status.UpdateAvailable && SelectedVersion?.Tag == _status.Latest?.Tag ? "Update" : "Switch";
 
     public bool ShowsUpdateBadge => _status.UpdateAvailable;
 
